@@ -1,0 +1,90 @@
+/* Define custom properties (CSS variables) */
+:root {
+    --translate-x: -5px;
+    /* Horizontal translation for hover */
+    --translate-y: -5px;
+    /* Vertical translation for hover */
+    --shadow-x: 5px;
+    /* Horizontal shadow offset */
+    --shadow-y: 5px;
+    /* Vertical shadow offset */
+    --shadow-blur: 0px;
+    /* Shadow blur */
+    --shadow-color: rgba(0, 0, 0, 1);
+    /* Shadow color */
+}
+
+/* Base card style */
+.p-card-hover {
+    transition: all 0.3s ease;
+    /* Smooth transition for transform and shadow */
+    transform: rotateX(0deg) rotateY(0deg) translateY(0);
+    /* Default state */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow */
+    position: relative;
+    /* Ensure the card can be transformed */
+    border-radius: 0px;
+    /* Remove border-radius for square corners */
+}
+
+/* On hover, apply lifting effect with shadow on bottom-right */
+.p-card-hover:hover {
+    transform: translateY(var(--translate-y)) translateX(var(--translate-x));
+    /* Use variables for translate */
+    box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color);
+    /* Use variables for shadow */
+}
+
+
+/* globals.css */
+
+/* Reset all components' border-radius to 0 */
+.p-card,
+.p-button,
+.p-inputtext,
+.p-dropdown,
+.p-textarea,
+.p-field,
+.p-checkbox,
+.p-radio,
+.p-slider,
+.p-selectbutton,
+.p-calendar,
+.p-avatar,
+.p-menubar {
+    border-radius: 0 !important;
+    /* !important to ensure it overrides other styles */
+}
+
+/* Optionally, if you want to reset other elements, you can do so similarly */
+.button-container {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+.p-card-hover .button-container {
+    /* aspect-ratio: 1/1; */
+    visibility: hidden;
+    /* transition: all 0.3s ease; */
+}
+.p-card-hover:hover .button-container {
+    visibility: visible;
+    opacity: 1; /* Fade in buttons on hover */
+  }
+  .p-card-hover .settings-button {
+    aspect-ratio: 1/1;
+    /* visibility: hidden; */
+}
+
+/* app.css or any global CSS file */
+.p-menuitem-link {
+    transition: border-radius 0.3s ease; /* Smooth transition for the border-radius */
+}
+
+.p-menuitem-link:hover {
+    border-radius: 0 !important; /* Remove border radius on hover */
+}
