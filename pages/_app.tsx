@@ -6,9 +6,19 @@ import { AppProps } from 'next/app';
 import { motion } from 'framer-motion'; // Import Framer Motion
 import Navbar from 'src/components/layout/Navbar'; // Your Navbar component
 import { Suspense } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
+    const queryClient = new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: Infinity,
+          },
+        },
+      })
+
   return (
+    <QueryClientProvider client={queryClient}>
     <Suspense fallback={<div>Loading...</div>}>
       <Navbar /> {/* Navbar will stay static on all pages */}
       <motion.div
@@ -21,6 +31,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
         <Component {...pageProps} />
       </motion.div>
     </Suspense>
+    </QueryClientProvider>
   );
 };
 

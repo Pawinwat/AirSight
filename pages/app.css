@@ -1,4 +1,10 @@
 /* Define custom properties (CSS variables) */
+body {
+    font-family: 'Arial';
+  
+  }
+  
+
 :root {
     --translate-x: -5px;
     /* Horizontal translation for hover */
@@ -88,3 +94,11 @@
 .p-menuitem-link:hover {
     border-radius: 0 !important; /* Remove border radius on hover */
 }
+
+.round-chip {
+    border-radius: 50%; /* Fully round */
+    padding: 0.5rem 1rem; /* Adjust padding for balance */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }

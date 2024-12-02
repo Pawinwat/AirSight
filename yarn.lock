@@ -227,6 +227,18 @@
   dependencies:
     tslib "^2.4.0"
 
+"@tanstack/query-core@5.60.6":
+  version "5.60.6"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.60.6.tgz#0dd33fe231b0d18bf66d0c615b29899738300658"
+  integrity sha512-tI+k0KyCo1EBJ54vxK1kY24LWj673ujTydCZmzEZKAew4NqZzTaVQJEuaG1qKj2M03kUHN46rchLRd+TxVq/zQ==
+
+"@tanstack/react-query@^5.61.3":
+  version "5.61.3"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.61.3.tgz#0187b73b87adaeaed09f3d9717e35b507175fe23"
+  integrity sha512-c3Oz9KaCBapGkRewu7AJLhxE9BVqpMcHsd3KtFxSd7FSCu2qGwqfIN37zbSGoyk6Ix9LGZBNHQDPI6GpWABnmA==
+  dependencies:
+    "@tanstack/query-core" "5.60.6"
+
 "@types/node@^20":
   version "20.17.7"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.17.7.tgz#790151a28c5a172773d95d53a0c23d3c59a883c4"
@@ -409,8 +421,9 @@ mime-types@^2.1.12:
   version "0.1.0"
   dependencies:
     "@prisma/client" "^5.22.0"
+    axios "^1.7.7"
     framer-motion "^11.11.17"
-    my-nextjs-primereact-app "file:C:/Users/pawin/AppData/Local/Yarn/Cache/v6/npm-my-nextjs-primereact-app-0.1.0-c1fe267f-1fa3-4ee4-a067-d202b0837976-1732562540981/node_modules/my-nextjs-primereact-app"
+    my-nextjs-primereact-app "file:C:/Users/pawin/AppData/Local/Yarn/Cache/v6/npm-my-nextjs-primereact-app-0.1.0-407f09c5-87f2-4ded-b816-8b45dfb5fcba-1732563337063/node_modules/my-nextjs-primereact-app"
     next "15.0.3"
     primeicons "^7.0.0"
     primereact "^10.8.4"
