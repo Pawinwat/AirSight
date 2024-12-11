@@ -1,9 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 /* Define custom properties (CSS variables) */
 body {
     font-family: 'Arial';
-  
-  }
-  
+
+}
+
 
 :root {
     --translate-x: -5px;
@@ -42,6 +45,30 @@ body {
     /* Use variables for shadow */
 }
 
+.p-tag:hover {
+    transition: all 0.3s ease;
+    transform: translateY(var(--translate-y)) translateX(var(--translate-x));
+    box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color);
+}
+
+.p-card-item:hover {
+    transition: all 0.3s ease-in-out;
+    transform: translateY(var(--translate-y)) translateX(var(--translate-x));
+    /* Use variables for translate */
+    box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color);
+    /* Use variables for shadow */
+}
+
+.p-card-item {
+    transition: all 0.3s ease-in-out;
+}
+
+.p-button:hover {
+    transition: all 0.3s ease-in-out;
+    transform: translateY(var(--translate-y)) translateX(var(--translate-x));
+    box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color);
+
+}
 
 /* globals.css */
 
@@ -58,8 +85,15 @@ body {
 .p-selectbutton,
 .p-calendar,
 .p-avatar,
-.p-menubar {
+.p-tag,
+.p-skeleton,
+.p-menubar,
+.p-menuitem,
+.p-menu-list,
+.p-multiselect,
+.p-multiselect-token {
     border-radius: 0 !important;
+    transition: all 0.3s ease-in-out;
     /* !important to ensure it overrides other styles */
 }
 
@@ -72,33 +106,41 @@ body {
     gap: 0.5rem;
     justify-content: center;
 }
+
 .p-card-hover .button-container {
     /* aspect-ratio: 1/1; */
     visibility: hidden;
     /* transition: all 0.3s ease; */
 }
+
 .p-card-hover:hover .button-container {
     visibility: visible;
-    opacity: 1; /* Fade in buttons on hover */
-  }
-  .p-card-hover .settings-button {
+    opacity: 1;
+    /* Fade in buttons on hover */
+}
+
+.p-card-hover .settings-button {
     aspect-ratio: 1/1;
     /* visibility: hidden; */
 }
 
 /* app.css or any global CSS file */
 .p-menuitem-link {
-    transition: border-radius 0.3s ease; /* Smooth transition for the border-radius */
+    transition: border-radius 0.3s ease;
+    /* Smooth transition for the border-radius */
 }
 
 .p-menuitem-link:hover {
-    border-radius: 0 !important; /* Remove border radius on hover */
+    border-radius: 0 !important;
+    /* Remove border radius on hover */
 }
 
 .round-chip {
-    border-radius: 50%; /* Fully round */
-    padding: 0.5rem 1rem; /* Adjust padding for balance */
+    border-radius: 50%;
+    /* Fully round */
+    padding: 0.5rem 1rem;
+    /* Adjust padding for balance */
     display: flex;
     align-items: center;
     justify-content: center;
-  }
+}

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'; // Import Framer Motion
 import { useRouter } from 'next/router'; // Import the useRouter hook
 import { Card } from 'primereact/card';
 import React from 'react';
-import { getInstanceStatus } from 'src/api/airflow';
+import { getInstanceStatus, getVersion } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import ConnectionCard from './components/ConnectionCard';
 import { MainPageProps } from './type';
@@ -32,9 +32,14 @@ export async function getServerSideProps() {
           baseURL: con.api_url as string,
           headers: con.header as AxiosHeaders
         }
+      
 
         );
-        return { ...con, status }; // Append the status to the connection object
+        const version = await getVersion({
+          baseURL: con.api_url as string,
+          headers: con.header as AxiosHeaders
+        })
+        return { ...con, status,version }; // Append the status to the connection object
       } catch (error) {
         console.error(`Error fetching status for connection ${con.connection_id}:`, error);
         return { ...con, status: 'Error' }; // Handle errors by appending a default error status

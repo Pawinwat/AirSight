@@ -17,7 +17,7 @@ function ConnectionCard({ data }: ConnectionCardProps) {
     };
 
     const openDashboard = (connectionId?: number | string) => {
-        const targetUrl = `/dashboard${!!connectionId ? `/${connectionId}` : ''}`;
+        const targetUrl = `/dags${!!connectionId ? `/${connectionId}` : ''}`;
         router.push(targetUrl); // Navigate to the /config page
     };
 
@@ -46,7 +46,7 @@ function ConnectionCard({ data }: ConnectionCardProps) {
                 className="p-card-hover"
                 onClick={() => openDashboard(data.connection_id)}
             >
-                <div >
+                <div style={{ display: 'flex', gap: 5 }}>
                     {
                         Object.keys(data.status || {})
                             .filter((key) => !!data.status[key as keyof InstanceStatus]?.status) // Ensure the object has a `status` property
@@ -62,8 +62,11 @@ function ConnectionCard({ data }: ConnectionCardProps) {
                                     />
                                 )
                             })
-                }
+                    }
                 </div>
+                <>
+                    {data.version.version}
+                </>
                 <div className="button-container">
                     <Button
                         onClick={(e) => {

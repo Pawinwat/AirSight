@@ -1,4 +1,4 @@
-import 'primereact/resources/themes/viva-dark/theme.css'; // PrimeReact theme
+import 'primereact/resources/themes/lara-dark-indigo/theme.css'; // PrimeReact theme
 import 'primereact/resources/primereact.min.css'; // PrimeReact core styles
 import 'primeicons/primeicons.css'; // PrimeIcons
 import './app.css'; // Custom CSS file
@@ -20,7 +20,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
     <QueryClientProvider client={queryClient}>
     <Suspense fallback={<div>Loading...</div>}>
-      <Navbar /> {/* Navbar will stay static on all pages */}
+      {/* <Navbar /> Navbar will stay static on all pages */}
       <motion.div
         key={pageProps.key} // Key to trigger the page transition on route change
         initial={{ opacity: 0 }} // Initial state of the page (invisible)

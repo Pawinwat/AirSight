@@ -1,0 +1,1 @@
+type StringBool = 'true' |'false'

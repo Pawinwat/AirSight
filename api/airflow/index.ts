@@ -1,5 +1,16 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { AirflowDagsResponse } from "src/types/airflow";
+import { AirflowDagsResponse, Version } from "src/types/airflow";
+
+
+/**
+ * Get a list of DAGs from the Airflow instance.
+ * @param config - Axios request configuration including baseURL, headers, and params.
+ * @returns List of DAGs.
+ */
+export const getVersion = async (config: AxiosRequestConfig) => {
+  const { data } = await axios.get(`${config.baseURL}/api/v1/version`, config);
+  return data as Version;
+};
 
 /**
  * Get the instance health status.
@@ -28,7 +39,8 @@ export const getDags = async (config: AxiosRequestConfig) => {
  * @returns DAG details.
  */
 export const getDagDetails = async (config: AxiosRequestConfig, dagId: string) => {
-  const { data } = await axios.get(`${config.baseURL}/api/v1/dags/${dagId}`, config);
+  const url  = `${config.baseURL}/api/v1/dags/${dagId}`
+  const { data } = await axios.get(url, config);
   return data;
 };
 
@@ -139,5 +151,19 @@ export const updateDag = async (
     payload,
     config
   );
+  return data;
+};
+
+
+/**
+ * Get the details of a specific DAG.
+ * @param config - Axios request configuration including baseURL, headers.
+ * @param dagId - The ID of the DAG.
+ * @returns DAG details.
+ */
+export const getDagSource = async (config: AxiosRequestConfig, fileToken: string) => {
+  const url  = `${config.baseURL}/api/v1/dagSources/${fileToken}`
+  console.log(url)
+  const { data } = await axios.get(url, config);
   return data;
 };
