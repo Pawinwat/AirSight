@@ -1,12 +1,11 @@
-import 'primereact/resources/themes/lara-dark-indigo/theme.css'; // PrimeReact theme
-import 'primereact/resources/primereact.min.css'; // PrimeReact core styles
-import 'primeicons/primeicons.css'; // PrimeIcons
-import './app.css'; // Custom CSS file
-import { AppProps } from 'next/app';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { motion } from 'framer-motion'; // Import Framer Motion
-import Navbar from 'src/components/layout/Navbar'; // Your Navbar component
+import { AppProps } from 'next/app';
+import 'primeicons/primeicons.css'; // PrimeIcons
+import 'primereact/resources/primereact.min.css'; // PrimeReact core styles
+import 'primereact/resources/themes/lara-dark-indigo/theme.css'; // PrimeReact theme
 import { Suspense } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import './app.css'; // Custom CSS file
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
     const queryClient = new QueryClient({

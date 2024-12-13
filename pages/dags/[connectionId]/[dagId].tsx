@@ -1,25 +1,37 @@
-import React from 'react';
 import { GetServerSideProps } from 'next';
-import { getDagDetails, getDagRuns, getDagSource } from 'src/api/airflow';
-import prisma from 'src/lib/prisma';
-import { AirflowDagRunsResponse, Dag, DagRun } from 'src/types/airflow';
-import { InputTextarea } from 'primereact/inputtextarea';
-import { Line, Scatter } from 'react-chartjs-2';
 import { Chart } from 'primereact/chart';
+import { InputTextarea } from 'primereact/inputtextarea';
+import React from 'react';
+import { getDagDetails, getDagRuns, getDagSource, getTaskInstances } from 'src/api/airflow';
+import prisma from 'src/lib/prisma';
+import { Dag, DagRun, TaskInstance } from 'src/types/airflow';
 
+import { AxiosHeaders, AxiosRequestConfig } from 'axios';
 import {
-    Chart as ChartJS,
     CategoryScale,
+    Chart as ChartJS, // For time-based x-axis
+    ChartOptions,
+    Legend,
     LinearScale,
     PointElement,
+    TimeScale,
     Title,
     Tooltip,
-    Legend,
-    TimeScale, // For time-based x-axis
-    ChartOptions,
 } from 'chart.js';
 import 'chartjs-adapter-date-fns'; // Ensure the adapter is installed
-import { AxiosHeaders, AxiosRequestConfig } from 'axios';
+import Link from 'next/link';
+import { Card } from 'primereact/card';
+import { DataView } from 'primereact/dataview';
+import { MenuItem } from 'primereact/menuitem';
+import { Tag } from 'primereact/tag';
+import Breadcrumbs from 'src/components/breadcrumb/Breadcrumbs';
+import DagRunTemplate from 'src/components/dag/DagRunTemplate';
+import PageFrame from 'src/components/layout/PageFrame';
+import { PATH } from 'src/routes';
+import { ConnectionData } from 'src/types/db';
+import { getStatusColor } from 'src/constant/colors';
+import { CARD_GAP } from 'src/components/layout/constants';
+import { getBaseRequestConfig } from 'src/utils/request';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale);
 
@@ -31,13 +43,16 @@ interface ScatterPoint {
 
 interface SingleDagPageServerProps {
     dag: Dag;
-    runs: DagRun[];
+    dag_runs: DagRun[];
     dagSource: string;
+    connection: ConnectionData;
+    tasks:TaskInstance[]
 }
+type DagIdPageParams = { connectionId: string; dagId: string; runId: string };
 
-export const getServerSideProps: GetServerSideProps<SingleDagPageServerProps> = async ({ params, query }) => {
-    const { connectionId, dagId } = params as { connectionId: string; dagId: string };
-    const limit = parseInt((query.limit as string) || '20', 20);
+export const getServerSideProps: GetServerSideProps = async ({ params, query }) => {
+    const { connectionId, dagId, runId } = params as DagIdPageParams
+    const limit = parseInt((query.limit as string) || '25', 25);
     const offset = parseInt((query.offset as string) || '0', 0);
 
     const connections = await prisma.connection.findMany({
@@ -48,50 +63,48 @@ export const getServerSideProps: GetServerSideProps<SingleDagPageServerProps> = 
     if (!connection || !connection.api_url || !connection.header) {
         return { notFound: true };
     }
-
+    const baseConfig = getBaseRequestConfig(connection)
     const config: AxiosRequestConfig = {
-        headers: connection.header as AxiosHeaders,
         params: { limit, offset, order_by: '-execution_date' },
-        baseURL: connection.api_url,
+        ...baseConfig
     };
-
     const dagDetailsConfig: AxiosRequestConfig = {
-        headers: connection.header as AxiosHeaders,
-        baseURL: connection.api_url,
+        ...baseConfig
     };
+    const taskInstancesConfig: AxiosRequestConfig = {
+        ...baseConfig
+    };
+    const taskInStance = runId ? (getTaskInstances(taskInstancesConfig, dagId, runId)) : {}
+    const [runs, dag, tasks] = await Promise.all([
+        getDagRuns(config, dagId),
+        getDagDetails(dagDetailsConfig, dagId),
+        taskInStance
+    ]);
 
-    const runs: AirflowDagRunsResponse = await getDagRuns(config, dagId);
-    const dag: Dag = await getDagDetails(dagDetailsConfig, dagId);
     const dagSource: string = await getDagSource(dagDetailsConfig, dag.file_token);
-    console.log(runs)
     return {
         props: {
+            connection,
             dag,
-            runs: runs?.dag_runs || [],
+            dag_runs: runs?.dag_runs || [],
             dagSource,
+            tasks
         },
     };
 };
 
-const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, runs, dagSource }) => {
+const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagSource, connection }) => {
     // Map status to colors
-    const statusColors: Record<string, string> = {
-        success: 'rgba(75, 192, 75, 1)', // Green
-        failed: 'rgba(192, 75, 75, 1)', // Red
-        running: 'rgba(75, 75, 192, 1)', // Blue
-        queued: 'rgba(192, 192, 75, 1)', // Yellow
-        default: 'rgba(128, 128, 128, 1)', // Gray
-    };
 
     // Prepare data for the scatter plot
-    const scatterData = runs
+    const scatterData = dag_runs
         .filter((run) => run.start_date && run.end_date) // Ensure dates exist
         .map((run) => {
             const startDate = new Date(run.start_date as string).getTime();
             const endDate = new Date(run.end_date as string).getTime();
             const executionDate = new Date(run.execution_date); // X-axis value
             const runTime = (endDate - startDate) / 1000; // Y-axis value in seconds
-            const statusColor = statusColors[run.state] || statusColors.default; // Use color based on status
+            const statusColor = getStatusColor(run.state); // Use color based on status
             return { x: executionDate, y: runTime, backgroundColor: statusColor };
         });
 
@@ -141,40 +154,90 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, runs, dagSourc
         },
     };
 
+
+    const items: MenuItem[] = [
+        {
+            label: connection.name as string,
+            id: connection.connection_id,
+            url: PATH.connectionId(connection.connection_id)
+
+        },
+        {
+            label: dag.dag_id as string,
+            id: dag.dag_id,
+            template: () => <Link href={PATH.mainDagId(connection.connection_id, dag.dag_id)}>{dag.dag_id}</Link>
+        }
+
+    ];
+
+    const home: MenuItem = { icon: 'pi pi-home', url: '/main' };
+
     return (
-        <div className="p-m-4">
+        <PageFrame>
+            <Breadcrumbs model={items} />
             <h1 className="p-text-center">DAG Details: {dag.dag_id}</h1>
+            <div
+                style={{ display: 'flex', flexDirection: 'row', width: '100%', gap: CARD_GAP }}
+            >
+                <div
+                    style={{ display: 'flex', flexDirection: 'column', width: '50%', gap: CARD_GAP }}
 
-            <div className="p-card">
-                <h2 className="p-card-header">DAG Metadata</h2>
-                <div className="p-card-body">
-                    <p>
-                        <strong>Owner:</strong> {dag.owners}
-                    </p>
-                    <p>
-                        <strong>Description:</strong> {dag.description || 'N/A'}
-                    </p>
-                    <p>
-                        <strong>Schedule:</strong> {dag.schedule_interval?.value || 'N/A'}
-                    </p>
+                >
+                    <Card
+                        title='DAG Metadata'
+
+                    >
+                        <div className="p-card-body">
+                            <p>
+                                <strong>Owner:</strong> {dag.owners}
+                            </p>
+                            <p>
+                                <strong>Description:</strong> {dag.description || 'N/A'}
+                            </p>
+                            <p>
+                                <strong>Schedule:</strong> {dag.schedule_interval?.value || 'N/A'}
+                            </p>
+                            <p>
+                                <strong>Schedule Description:</strong> {dag.timetable_description || 'N/A'}
+                            </p>
+                            {
+                                dag.tags?.map((t, index) => (
+                                    <Tag
+                                        key={index}
+                                        value={t.name}
+                                        style={{ marginRight: '0.5rem', marginBottom: '0.2rem', cursor: 'pointer' }}
+                                        className='p-tag-info'
+                                    // className={selectedTags.includes(t.name) ? 'p-tag-success' : 'p-tag-info'} // Highlight selected tags
+                                    // onClick={() => handleTagClick(t.name)}
+                                    />
+                                ))}
+
+                        </div>
+                    </Card>
+
+                    <Card
+                        title='DAG Runs Execution Times'
+                    >
+                        <Chart type="line" style={{ height: '40vh', width: '100%' }} data={chartData} options={chartOptions} />
+                    </Card>
                 </div>
-            </div>
 
-            <div className="p-card p-mt-4">
-                <h2 className="p-card-header">DAG Runs Execution Times</h2>
-                <Chart type="line" style={{ height: '30vh', width: '100%' }} data={chartData} options={chartOptions} />
+                <InputTextarea
+                    style={{ flexGrow: 'unset', width: '50%' }}
+                    // autoResize 
+                    // cols={90}
+                    value={dagSource}
+                />
             </div>
-
-            <InputTextarea
-                variant="filled"
-                value={dagSource}
-                cols={30}
-                rows={20}
+            <Card
                 style={{
-                    width: '100%',
+                    marginTop: CARD_GAP,
+                    width: '50%'
                 }}
-            />
-        </div>
+            >
+                <DataView value={dag_runs} listTemplate={DagRunTemplate} paginator rows={5} />
+            </Card>
+        </PageFrame>
     );
 };
 

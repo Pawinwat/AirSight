@@ -1,5 +1,4 @@
 import { AxiosHeaders, AxiosRequestConfig } from 'axios';
-import { motion } from 'framer-motion'; // Import Framer Motion
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -8,22 +7,29 @@ import { Checkbox } from 'primereact/checkbox';
 import { Chip } from 'primereact/chip';
 import { Column, ColumnBodyOptions } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
+import { DataView } from 'primereact/dataview';
 import { Dropdown } from 'primereact/dropdown';
 import { Skeleton } from 'primereact/skeleton';
 import { Tag } from 'primereact/tag';
 import { JSX, useEffect, useState } from 'react';
-import { getDags } from 'src/api/airflow';
+import { getDagRuns, getDags } from 'src/api/airflow';
+import DagRunTemplate from 'src/components/dag/DagRunTemplate';
+import PageFrame from 'src/components/layout/PageFrame';
 import prisma from 'src/lib/prisma';
 import { PATH } from 'src/routes';
-import { pageVariants } from 'src/transitions';
-import { AirflowDagsResponse, Dag } from 'src/types/airflow';
+import { AirflowDagRunsResponse, AirflowDagsResponse, Dag, DagRun } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import ConnectionSelector from './components/ConnectionSelector';
+import { CARD_GAP } from 'src/components/layout/constants';
+import { getBaseRequestConfig } from 'src/utils/request';
+import { STATE_COLORS } from 'src/constant/colors';
+import { Card } from 'primereact/card';
+
 interface DagsServerProps {
   connection: ConnectionData
   connections: ConnectionData[]
-  dags: Dag[];
-  total_entries: number;
+  dags: AirflowDagsResponse;
+  dag_runs: AirflowDagRunsResponse
 }
 export const getServerSideProps: GetServerSideProps = async ({ params, query }) => {
   const { connectionId } = params as { connectionId: string };
@@ -39,39 +45,55 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
   if (!connection || !connection.api_url || !connection.header) {
     return { notFound: true };
   }
+  const baseConfig = getBaseRequestConfig(connection)
   const config: AxiosRequestConfig = {
-    headers: connection.header as AxiosHeaders, // Ensure headers are parsed correctly if stored as JSON
     params: {
       limit,
       offset,
       tags: tags || null,
       only_active: only_active || null
     },
-    baseURL: connection.api_url,
+    ...baseConfig
   };
-  const data: AirflowDagsResponse = await getDags(config);
+
+  const runConfig: AxiosRequestConfig = {
+    params: {
+      order_by: '-execution_date'
+    },
+    ...baseConfig
+  };
+
+  // const data: AirflowDagsResponse = await getDags(config);
+  // const runs: AirflowDagRunsResponse = await getDagRuns(runConfig, '~');
+  const [
+    data,
+    runs
+  ] = await Promise.all([
+    getDags(config),
+    getDagRuns(runConfig, '~')
+  ])
   return {
     props: {
       connection,
       connections,
-      dags: data?.dags || [],
-      total_entries: data?.total_entries || 0,
+      dags: data,
+      dag_runs: runs
     },
   };
 };
 
-export default function DagsPage({ connection, dags, total_entries, connections }: DagsServerProps) {
+export default function DagsPage({ connection, dags, connections, dag_runs }: DagsServerProps) {
   const router = useRouter();
   const { query } = router;
   const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
   const [loading, setLoading] = useState(false);
-
+  const [selectedRunId, setSelectedRunId] = useState<string>(query.run_id as string || '')
   // Pagination variables
   const [limit, setLimit] = useState(parseInt((query.limit as string) || '10', 10));
   const offset = parseInt((query.offset as string) || '0', 10);
 
   const rowsPerPageOptions = [5, 10, 25, 50];
-  const totalPages = Math.ceil(total_entries / limit);
+  const totalPages = Math.ceil(dags?.total_entries / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
   const generatePageButtons = () => {
@@ -139,7 +161,9 @@ export default function DagsPage({ connection, dags, total_entries, connections 
   const [selectedTags, setSelectedTags] = useState<string[]>(
     query.tags ? (query.tags as string).split(',') : []
   );
-
+  const [selectedRunsTags, setSelectedRunsTags] = useState<string[]>(
+    query.run_tags ? (query.tags as string).split(',') : []
+  );
   const handleTagClick = (tag: string) => {
     const newTags = selectedTags.includes(tag)
       ? selectedTags.filter((t) => t !== tag)
@@ -164,6 +188,29 @@ export default function DagsPage({ connection, dags, total_entries, connections 
 
   }
 
+  const handleStatusFilterClick = (status: string) => {
+    const newTags = selectedRunsTags.includes(status)
+      ? selectedRunsTags.filter((t) => t !== status)
+      : [...selectedRunsTags, status];
+    setSelectedRunsTags(newTags);
+    // updateQueryParams(0, limit, newTags, onlyActive);
+  };
+
+  const handleDagRunClick = (run: DagRun) => {
+    console.log(run)
+    updateQueryParams(0, limit, selectedTags, onlyActive); // Update query when checkbox changes
+
+  }
+
+
+  const runData = dag_runs?.dag_runs?.filter(run => (selectedRunsTags?.length === 0) || selectedRunsTags.includes(run.state)) || []
+  const runStat = dag_runs?.dag_runs?.reduce((acc, run) => {
+    acc[run.state] = (acc[run.state] || 0) + 1; // Increment the count for the state
+    return acc;
+  }, {} as Record<string, number>);
+
+
+  // Initialize an empty object
   const mainBodyTemplate = (rowData: Dag) => {
     return (
       <div className="card flex flex-column gap-2" style={{ gap: 10 }}>
@@ -179,7 +226,6 @@ export default function DagsPage({ connection, dags, total_entries, connections 
               href={PATH.mainDagId(connection.connection_id, rowData.dag_id)}
               style={{ textDecoration: 'none' }}
             >
-
               {rowData.dag_id}
             </Link>
 
@@ -198,7 +244,7 @@ export default function DagsPage({ connection, dags, total_entries, connections 
                 <Skeleton key={index} width="4rem" height="1.5rem" style={{ marginTop: '0.5rem' }} />
               </div>
             ))
-            : rowData.tags?.map((t, index) => (
+            : rowData.tags?.length > 0 ? (rowData.tags?.map((t, index) => (
               <Tag
                 key={index}
                 value={t.name}
@@ -206,7 +252,7 @@ export default function DagsPage({ connection, dags, total_entries, connections 
                 className={selectedTags.includes(t.name) ? 'p-tag-success' : 'p-tag-info'} // Highlight selected tags
                 onClick={() => handleTagClick(t.name)}
               />
-            ))}
+            ))) : <Tag value={'No Tag'} />}
         </div>
       </div>
     );
@@ -217,18 +263,11 @@ export default function DagsPage({ connection, dags, total_entries, connections 
   };
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={pageVariants}
-      transition={{ duration: 0.5 }}
-
-    >
+    <PageFrame>
       <div style={{ gap: 5, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <ConnectionSelector connections={connections} />
-          <p>Total DAGs: {total_entries}</p>
+          <p>Total DAGs: {dags.total_entries}</p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
@@ -281,7 +320,7 @@ export default function DagsPage({ connection, dags, total_entries, connections 
           </span>
         </div>
 
-        <DataTable size="small" value={dags} className="p-datatable-gridlines">
+        <DataTable size="small" value={dags.dags || []} className="p-datatable-gridlines">
           <Column field="dag_id" header="DAG ID" style={{ width: '50%' }} body={mainBodyTemplate} />
           <Column field="description" header="Description" style={{ width: '25%' }} body={loadingTemplate} />
           <Column field="last_parsed_time" header="Last Parsed Time" style={{ width: '25%' }} body={loadingTemplate} />
@@ -294,6 +333,69 @@ export default function DagsPage({ connection, dags, total_entries, connections 
         </div>
 
       </div>
-    </motion.div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          width: '100%',
+          gap: CARD_GAP,
+          marginTop: CARD_GAP,
+        }}
+
+      >
+        <div
+          style={{
+            width: '40%'
+          }}
+        >
+          <DataView
+            value={runData}
+            listTemplate={(item, option) => DagRunTemplate(item, option, handleDagRunClick)}
+            paginator
+            rows={5}
+            emptyMessage="No run"
+            header={
+              <div
+                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}
+              >
+                Recent
+                {Object.keys(STATE_COLORS).map((statusKey) => (
+                  <Tag
+                    key={`tag-${statusKey}`}
+                    style={{
+                      backgroundColor: STATE_COLORS[statusKey],
+                      cursor: 'pointer',
+                      transform: selectedRunsTags.includes(statusKey)
+                        ? 'translateY(var(--translate-y)) translateX(var(--translate-x))'
+                        : 'none',
+                      boxShadow: selectedRunsTags.includes(statusKey)
+                        ? 'var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color)'
+                        : 'none',
+                    }}
+                    onClick={() => handleStatusFilterClick(statusKey)}
+                  >
+                    {statusKey}{`(${runStat[statusKey] || 0})`}
+                  </Tag>
+                ))}
+              </div>
+            }
+          />
+
+        </div>
+        <div
+          style={{
+            width: '50%',
+            height: '100%'
+          }}
+        >
+          <Card
+            style={{ height: '100%' }}
+          >
+
+          </Card>
+          {/* <DataView value={dag_runs?.dag_runs?.filter(run => run.state == 'failed') || []} listTemplate={DagRunTemplate} paginator rows={5} header='Recent Failed Runs' /> */}
+        </div>
+      </div>
+    </PageFrame>
   );
 }

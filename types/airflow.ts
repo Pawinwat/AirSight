@@ -65,10 +65,72 @@ export interface DagRun {
   note: string | null; // String or null
   run_type: "manual" | "scheduled" | "backfill" | "triggered" | "unknown"; // Enum of possible run types
   start_date: string | null; // ISO date string or null
-  state: string
+  state: 'success' | 'failed' | 'running' | 'queued' | 'upstream_failed' | 'skipped' | 'none'; // Limited to known states
 }
 
 export interface Version {
   version: string,
   git_version: string
+}
+
+export interface TaskInstance {
+  task_id: string;
+  task_display_name: string;
+  dag_id: string;
+  dag_run_id: string;
+  execution_date: string; // ISO date string
+  start_date: string | null; // ISO date string or null
+  end_date: string | null; // ISO date string or null
+  duration: number;
+  state: string | null; // Nullable state
+  try_number: number;
+  map_index: number;
+  max_tries: number;
+  hostname: string;
+  unixname: string;
+  pool: string;
+  pool_slots: number;
+  queue: string;
+  priority_weight: number;
+  operator: string;
+  queued_when: string | null; // ISO date string or null
+  pid: number | null; // Nullable for cases where it's not set
+  executor: string;
+  executor_config: string;
+  sla_miss?: {
+    task_id: string;
+    dag_id: string;
+    execution_date: string; // ISO date string
+    email_sent: boolean;
+    timestamp: string; // ISO date string
+    description: string;
+    notification_sent: boolean;
+  };
+  rendered_map_index: string;
+  rendered_fields: Record<string, unknown>; // Generic object
+  trigger?: {
+    id: number;
+    classpath: string;
+    kwargs: string;
+    created_date: string; // ISO date string
+    triggerer_id: number;
+  };
+  triggerer_job?: {
+    id: number;
+    dag_id: string;
+    state: string;
+    job_type: string;
+    start_date: string; // ISO date string
+    end_date: string | null; // ISO date string or null
+    latest_heartbeat: string; // ISO date string
+    executor_class: string;
+    hostname: string;
+    unixname: string;
+  };
+  note: string | null; // Nullable note
+};
+
+export interface AirflowTaskInstanceResponse {
+  task_instances: TaskInstance[];
+  total_entries: number;
 }

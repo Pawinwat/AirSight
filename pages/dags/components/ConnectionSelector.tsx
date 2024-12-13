@@ -48,7 +48,7 @@ function ConnectionSelector({ connections }: ConnectionSelectorProps) {
 
 
     return (
-        <div className='p-card' style={{ display: 'flex', flexDirection: 'row', gap: 10, padding: 10 }}>
+        <div className="p-card" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10 }}>
             <Button
                 onClick={() => {
                     router.push(PATH.main)
@@ -56,11 +56,13 @@ function ConnectionSelector({ connections }: ConnectionSelectorProps) {
                 icon="pi pi-home"
             //   size="large"
             />
+                                <i className="pi pi-chevron-right" style={{ fontSize: '1.5rem' }}></i>
+
             {connections?.map((conn) => (
                 <Button
                     key={conn.connection_id}
                     onClick={() => {
-                        router.push(PATH.dagsId(conn.connection_id), { scroll: false })
+                        router.push(PATH.connectionId(conn.connection_id), { scroll: false })
                     }}
                     style={activeTab === conn.connection_id ? {
                         transform: 'translateY(var(--translate-y)) translateX(var(--translate-x))',

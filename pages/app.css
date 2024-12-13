@@ -1,6 +1,6 @@
-@tailwind base;
+/* @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; */
 /* Define custom properties (CSS variables) */
 body {
     font-family: 'Arial';
@@ -143,4 +143,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.p-card .p-card-content {
+    padding: 0px;
+}
+
+.p-card .p-card-body {
+    padding: 10px;
 }
