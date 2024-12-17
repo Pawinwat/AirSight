@@ -1,10 +1,10 @@
 import { GetServerSideProps } from 'next';
 import { Chart } from 'primereact/chart';
 import { InputTextarea } from 'primereact/inputtextarea';
-import React from 'react';
+import React, { useState } from 'react';
 import { getDagDetails, getDagRuns, getDagSource, getTaskInstances } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
-import { Dag, DagRun, TaskInstance } from 'src/types/airflow';
+import { Dag, DagRun, DagState, TaskInstance } from 'src/types/airflow';
 
 import { AxiosHeaders, AxiosRequestConfig } from 'axios';
 import {
@@ -32,6 +32,9 @@ import { ConnectionData } from 'src/types/db';
 import { getStatusColor } from 'src/constant/colors';
 import { CARD_GAP } from 'src/components/layout/constants';
 import { getBaseRequestConfig } from 'src/utils/request';
+import { useTaskInstances } from 'src/api/local/airflow/hooks';
+import { Accordion, AccordionTab } from 'primereact/accordion';
+import TaskLog from 'src/components/dag/TaskLog';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale);
 
@@ -46,7 +49,7 @@ interface SingleDagPageServerProps {
     dag_runs: DagRun[];
     dagSource: string;
     connection: ConnectionData;
-    tasks:TaskInstance[]
+    tasks: TaskInstance[]
 }
 type DagIdPageParams = { connectionId: string; dagId: string; runId: string };
 
@@ -169,8 +172,20 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
         }
 
     ];
+    const [selectedRun, setSelectedRun] = useState<DagRun | null>(null)
 
-    const home: MenuItem = { icon: 'pi pi-home', url: '/main' };
+    const handleDagRunClick = (run: DagRun) => {
+        setSelectedRun(
+            (prev) => prev?.dag_run_id == run.dag_run_id ? null : run
+        )
+    }
+    const taskInstance = useTaskInstances(
+        {},
+        connection?.connection_id,
+        selectedRun?.dag_id as string,
+        selectedRun?.dag_run_id as string
+    )
+    const taskInstanceData = taskInstance?.data?.task_instances
 
     return (
         <PageFrame>
@@ -229,14 +244,68 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
                     value={dagSource}
                 />
             </div>
-            <Card
+            <div
                 style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    width: '100%',
+                    gap: CARD_GAP,
                     marginTop: CARD_GAP,
-                    width: '50%'
                 }}
+
             >
-                <DataView value={dag_runs} listTemplate={DagRunTemplate} paginator rows={5} />
-            </Card>
+                <Card
+                    style={{
+                        width: '40%'
+                    }}
+                >
+                    <DataView
+                        value={dag_runs}
+                        listTemplate={(item, option) =>
+                            DagRunTemplate(
+                                item,
+                                option,
+                                handleDagRunClick,
+                                {
+                                    selected: (run: DagRun) => run?.dag_run_id && (run?.dag_run_id == selectedRun?.dag_run_id)
+                                })}
+                        paginator rows={5}
+                    />
+                </Card>
+                <div
+                    style={{
+                        width: '60%',
+                        height: '100%'
+                    }}
+                >
+            <Accordion
+            >
+
+              {
+                taskInstanceData?.map(t => (
+                  <AccordionTab
+                    key={t.dag_run_id}
+
+                    header={
+                      <div
+                        style={{
+                          gap: '20px'
+                        }}
+                      >
+                        <i className={`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: getStatusColor(t.state as DagState) }}></i>
+                        {t.task_id}
+                      </div>}>
+
+                    <TaskLog
+                      connection={connection}
+                      taskInstance={t}
+                    />
+                  </AccordionTab>
+                ))
+              }
+            </Accordion>
+                </div>
+            </div>
         </PageFrame>
     );
 };

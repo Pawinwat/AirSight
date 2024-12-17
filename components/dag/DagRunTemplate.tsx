@@ -4,6 +4,8 @@ import { getRunTypeColor, getStatusColor } from 'src/constant/colors';
 import { DagRun } from 'src/types/airflow';
 import { CARD_GAP } from '../layout/constants';
 import { MenuItemOptions } from 'primereact/menuitem';
+import Link from 'next/link';
+import { PATH } from 'src/routes';
 
 const styles: Record<string, CSSProperties> = {
     listItem: {
@@ -22,7 +24,7 @@ const styles: Record<string, CSSProperties> = {
     dagId: {
         fontSize: '14px',            // Smaller font size for DAG ID
         fontWeight: 'bold',
-        // marginBottom: '4px',
+        marginTop: '20px',
     },
     status: {
         fontSize: '12px',
@@ -39,8 +41,8 @@ const styles: Record<string, CSSProperties> = {
         gap: '6px',                  // Reduced gap between items for compactness
     },
 };
-type TemplatOption = 'list' | 'grid' | (string & Record<string, unknown>)
-const DagRunTemplate = (items: DagRun[], options?: TemplatOption, onClick?: (_: DagRun) => void) => {
+type TemplateOption = 'list' | 'grid' | (string & Record<string, unknown>)
+const DagRunTemplate = (items: DagRun[], options?: TemplateOption, onClick?: (_: DagRun) => void, externalProps?: Record<string, any>) => {
     const paddedItems = [
         ...items,
         ...Array(Math.max(0, 5 - (items?.length || 0))).fill(null), // Pad with null values for empty rows
@@ -48,7 +50,7 @@ const DagRunTemplate = (items: DagRun[], options?: TemplatOption, onClick?: (_: 
 
     const list = paddedItems.map((run, index) => (
         <Card
-            className="p-card-item"
+            className={externalProps?.selected && externalProps?.selected(run) ? "p-card-item-hover" : "p-card-item"}
             key={index}
             style={styles.listItem}
             onClick={() => {
@@ -58,7 +60,12 @@ const DagRunTemplate = (items: DagRun[], options?: TemplatOption, onClick?: (_: 
             {run ? (
                 <div style={{ display: 'flex', flexDirection: 'row', gap: CARD_GAP, justifyContent: 'space-between', width: "100%" }}>
                     <div>
-                        <h4 style={styles.dagId}>{run.dag_id}</h4>
+                        <Link
+                            href={PATH.mainDagId(externalProps?.connection?.connection_id, run.dag_id)}
+                            style={{ textDecoration: 'none', ...styles.dagId }}
+                        >
+                            {run.dag_id}
+                        </Link>
                         <p style={{ ...styles.status, color: getStatusColor(run.state) }}>
                             <strong>Status:</strong> {run.state}
                         </p>

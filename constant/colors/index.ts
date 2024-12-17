@@ -1,4 +1,4 @@
-import { DagRun } from "src/types/airflow";
+import { DagRun, DagState } from "src/types/airflow";
 
 
 export const STATE_COLORS: Record<string, string> = {
@@ -12,7 +12,7 @@ export const STATE_COLORS: Record<string, string> = {
   "skipped": 'darkorchid',
   "scheduled": 'tan',
 };
-export const getStatusColor = (state: DagRun['state']) => {
+export const getStatusColor = (state: DagState) => {
   return STATE_COLORS[state] || 'lightgray'; // Default color for undefined states
 };
 

@@ -51,12 +51,10 @@ body {
     box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color);
 }
 
-.p-card-item:hover {
+.p-card-item:hover,.p-card-item-hover {
     transition: all 0.3s ease-in-out;
     transform: translateY(var(--translate-y)) translateX(var(--translate-x));
-    /* Use variables for translate */
     box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color);
-    /* Use variables for shadow */
 }
 
 .p-card-item {
@@ -91,7 +89,13 @@ body {
 .p-menuitem,
 .p-menu-list,
 .p-multiselect,
-.p-multiselect-token {
+.p-multiselect-token,
+.p-component,
+.p-accordion,
+.p-accordion-tab,
+.p-accordion-header,
+.p-accordion-content,
+.p-accordion-header-link {
     border-radius: 0 !important;
     transition: all 0.3s ease-in-out;
     /* !important to ensure it overrides other styles */

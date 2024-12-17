@@ -1,5 +1,6 @@
-export async function GET() {
-    return Response.json({
-      message: `GET method called`,
-    });
-  }
+import axios from "axios";
+
+const localAxios = axios.create()
+export {
+    localAxios
+}

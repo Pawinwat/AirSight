@@ -49,7 +49,7 @@ export interface AirflowDagRunsResponse {
   dag_runs: DagRun[];
   total_entries: number;
 }
-
+export type DagState = 'success' | 'failed' | 'running' | 'queued' | 'upstream_failed' | 'skipped' | 'none'; 
 
 export interface DagRun {
   conf: Record<string, unknown>; // Represents an object with any key-value pairs
@@ -65,7 +65,7 @@ export interface DagRun {
   note: string | null; // String or null
   run_type: "manual" | "scheduled" | "backfill" | "triggered" | "unknown"; // Enum of possible run types
   start_date: string | null; // ISO date string or null
-  state: 'success' | 'failed' | 'running' | 'queued' | 'upstream_failed' | 'skipped' | 'none'; // Limited to known states
+  state: DagState; // Limited to known states
 }
 
 export interface Version {
@@ -82,7 +82,7 @@ export interface TaskInstance {
   start_date: string | null; // ISO date string or null
   end_date: string | null; // ISO date string or null
   duration: number;
-  state: string | null; // Nullable state
+  state: DagState | null; // Nullable state
   try_number: number;
   map_index: number;
   max_tries: number;

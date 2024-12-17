@@ -1,7 +1,8 @@
-import { AxiosHeaders, AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { Chip } from 'primereact/chip';
@@ -12,24 +13,26 @@ import { Dropdown } from 'primereact/dropdown';
 import { Skeleton } from 'primereact/skeleton';
 import { Tag } from 'primereact/tag';
 import { JSX, useEffect, useState } from 'react';
-import { getDagRuns, getDags } from 'src/api/airflow';
+import { getDags } from 'src/api/airflow';
+import { useDagRuns, useTaskInstances } from 'src/api/local/airflow/hooks';
 import DagRunTemplate from 'src/components/dag/DagRunTemplate';
+import TaskLog from 'src/components/dag/TaskLog';
+import { CARD_GAP } from 'src/components/layout/constants';
 import PageFrame from 'src/components/layout/PageFrame';
+import { getStatusColor, STATE_COLORS } from 'src/constant/colors';
 import prisma from 'src/lib/prisma';
 import { PATH } from 'src/routes';
-import { AirflowDagRunsResponse, AirflowDagsResponse, Dag, DagRun } from 'src/types/airflow';
+import { AirflowDagsResponse, Dag, DagRun, DagState, TaskInstance } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
-import ConnectionSelector from './components/ConnectionSelector';
-import { CARD_GAP } from 'src/components/layout/constants';
 import { getBaseRequestConfig } from 'src/utils/request';
-import { STATE_COLORS } from 'src/constant/colors';
-import { Card } from 'primereact/card';
+import ConnectionSelector from './components/ConnectionSelector';
 
 interface DagsServerProps {
   connection: ConnectionData
   connections: ConnectionData[]
   dags: AirflowDagsResponse;
-  dag_runs: AirflowDagRunsResponse
+  // dag_runs: AirflowDagRunsResponse
+  runConfig: AxiosRequestConfig
 }
 export const getServerSideProps: GetServerSideProps = async ({ params, query }) => {
   const { connectionId } = params as { connectionId: string };
@@ -56,38 +59,31 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
     ...baseConfig
   };
 
-  const runConfig: AxiosRequestConfig = {
-    params: {
-      order_by: '-execution_date'
-    },
-    ...baseConfig
-  };
-
   // const data: AirflowDagsResponse = await getDags(config);
   // const runs: AirflowDagRunsResponse = await getDagRuns(runConfig, '~');
   const [
-    data,
-    runs
+    data
   ] = await Promise.all([
     getDags(config),
-    getDagRuns(runConfig, '~')
   ])
   return {
     props: {
       connection,
       connections,
       dags: data,
-      dag_runs: runs
+
     },
   };
 };
 
-export default function DagsPage({ connection, dags, connections, dag_runs }: DagsServerProps) {
+export default function DagsPage({ connection, dags, connections }: DagsServerProps) {
   const router = useRouter();
   const { query } = router;
+
   const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
   const [loading, setLoading] = useState(false);
-  const [selectedRunId, setSelectedRunId] = useState<string>(query.run_id as string || '')
+  const [selectedRun, setSelectedRun] = useState<DagRun | null>(null)
+  const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null)
   // Pagination variables
   const [limit, setLimit] = useState(parseInt((query.limit as string) || '10', 10));
   const offset = parseInt((query.offset as string) || '0', 10);
@@ -197,19 +193,43 @@ export default function DagsPage({ connection, dags, connections, dag_runs }: Da
   };
 
   const handleDagRunClick = (run: DagRun) => {
-    console.log(run)
-    updateQueryParams(0, limit, selectedTags, onlyActive); // Update query when checkbox changes
-
+    setSelectedRun(
+      (prev) => prev?.dag_run_id == run.dag_run_id ? null : run
+    )
   }
 
+  const runParams = {
+    offset: 0,
+    limit: 100,
+    order_by: '-execution_date',
 
-  const runData = dag_runs?.dag_runs?.filter(run => (selectedRunsTags?.length === 0) || selectedRunsTags.includes(run.state)) || []
-  const runStat = dag_runs?.dag_runs?.reduce((acc, run) => {
+  }
+  const dagRuns = useDagRuns({
+    params: runParams
+  },
+    connection?.connection_id,
+    `~`
+  )
+
+
+  const dagRunsData = dagRuns?.data?.dag_runs
+  const runData = dagRunsData?.filter(run => (selectedRunsTags?.length === 0) || selectedRunsTags.includes(run.state)) || []
+  const runStat = dagRunsData?.reduce((acc, run) => {
     acc[run.state] = (acc[run.state] || 0) + 1; // Increment the count for the state
     return acc;
   }, {} as Record<string, number>);
 
 
+  const taskInstance = useTaskInstances(
+    {},
+    connection?.connection_id,
+    selectedRun?.dag_id as string,
+    selectedRun?.dag_run_id as string
+  )
+  const taskInstanceData = taskInstance
+  ?.data
+  ?.task_instances
+  ?.map(task=>({...task,dag_run_id:selectedRun?.dag_run_id as string}))
   // Initialize an empty object
   const mainBodyTemplate = (rowData: Dag) => {
     return (
@@ -259,7 +279,7 @@ export default function DagsPage({ connection, dags, connections, dag_runs }: Da
   };
 
   const loadingTemplate = (data: Dag, options: ColumnBodyOptions) => {
-    return loading ? <Skeleton width="100%" /> : <>{data[options?.field as keyof Dag]}</>;
+    return loading ? <Skeleton width="100%" /> : <>{data?.[options?.field as keyof Dag]}</>;
   };
 
   return (
@@ -350,33 +370,56 @@ export default function DagsPage({ connection, dags, connections, dag_runs }: Da
         >
           <DataView
             value={runData}
-            listTemplate={(item, option) => DagRunTemplate(item, option, handleDagRunClick)}
+            listTemplate={(item, option) =>
+              DagRunTemplate(
+                item,
+                option,
+                handleDagRunClick,
+                {
+                  selected: (run: DagRun) => {
+                    return run && !!(run?.dag_run_id == selectedRun?.dag_run_id)
+                  },
+                  connection
+                })}
             paginator
             rows={5}
             emptyMessage="No run"
             header={
               <div
-                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}
+                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
               >
-                Recent
-                {Object.keys(STATE_COLORS).map((statusKey) => (
-                  <Tag
-                    key={`tag-${statusKey}`}
-                    style={{
-                      backgroundColor: STATE_COLORS[statusKey],
-                      cursor: 'pointer',
-                      transform: selectedRunsTags.includes(statusKey)
-                        ? 'translateY(var(--translate-y)) translateX(var(--translate-x))'
-                        : 'none',
-                      boxShadow: selectedRunsTags.includes(statusKey)
-                        ? 'var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color)'
-                        : 'none',
-                    }}
-                    onClick={() => handleStatusFilterClick(statusKey)}
-                  >
-                    {statusKey}{`(${runStat[statusKey] || 0})`}
-                  </Tag>
-                ))}
+                <p>
+                  Recent
+                </p>
+                <div
+                  style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}
+                >
+                  {Object.keys(STATE_COLORS).map((statusKey) => (
+                    <Tag
+                      key={`tag-${statusKey}`}
+                      style={{
+                        backgroundColor: STATE_COLORS[statusKey],
+                        cursor: 'pointer',
+                        transform: selectedRunsTags.includes(statusKey)
+                          ? 'translateY(var(--translate-y)) translateX(var(--translate-x))'
+                          : 'none',
+                        boxShadow: selectedRunsTags.includes(statusKey)
+                          ? 'var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color)'
+                          : 'none',
+                      }}
+                      onClick={() => handleStatusFilterClick(statusKey)}
+                    >
+                      {statusKey}{`(${runStat?.[statusKey] || 0})`}
+                    </Tag>
+                  ))}
+                </div>
+                <Button
+                  icon={dagRuns?.isFetching ? 'pi pi-spin pi-refresh' : 'pi pi-refresh'}
+                  onClick={() => {
+                    dagRuns?.refetch()
+                  }}
+                />
+                <Checkbox checked />
               </div>
             }
           />
@@ -384,16 +427,38 @@ export default function DagsPage({ connection, dags, connections, dag_runs }: Da
         </div>
         <div
           style={{
-            width: '50%',
+            width: '60%',
             height: '100%'
           }}
         >
-          <Card
-            style={{ height: '100%' }}
+
+          <Accordion
           >
 
-          </Card>
-          {/* <DataView value={dag_runs?.dag_runs?.filter(run => run.state == 'failed') || []} listTemplate={DagRunTemplate} paginator rows={5} header='Recent Failed Runs' /> */}
+            {
+              taskInstanceData?.map(t => (
+                <AccordionTab
+                  key={`${t.dag_run_id}-${t.try_number}`}
+
+                  header={
+                    <div
+                      style={{
+                        gap: '20px'
+                      }}
+                    >
+                      <i className={`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: getStatusColor(t.state as DagState) }}></i>
+                      {t.task_id}
+                    </div>}>
+
+                  <TaskLog
+                    connection={connection}
+                    taskInstance={t}
+                  />
+                </AccordionTab>
+              ))
+            }
+          </Accordion>
+
         </div>
       </div>
     </PageFrame>

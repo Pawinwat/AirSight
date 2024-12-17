@@ -56,7 +56,7 @@ function ConnectionSelector({ connections }: ConnectionSelectorProps) {
                 icon="pi pi-home"
             //   size="large"
             />
-                                <i className="pi pi-chevron-right" style={{ fontSize: '1.5rem' }}></i>
+            <i className="pi pi-chevron-right" style={{ fontSize: '1.5rem' }}></i>
 
             {connections?.map((conn) => (
                 <Button
