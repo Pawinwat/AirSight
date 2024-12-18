@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import prisma from 'src/lib/prisma';
-import { ConnectionData } from 'src/types/db';
-import { Card } from 'primereact/card';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from 'primereact/button';
-import { useParams, useRouter, redirect } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import prisma from 'src/lib/prisma';
 import { PATH } from 'src/routes';
+import { ConnectionData } from 'src/types/db';
 
 // Server-side function to fetch connections
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -38,9 +37,9 @@ function ConnectionSelector({ connections }: ConnectionSelectorProps) {
     const { connectionId } = params as { connectionId: string };
     const [activeTab, setActiveTab] = useState(connections[0]?.connection_id || '');
     const router = useRouter()
-    const handleTabClick = (connectionId: string) => {
-        setActiveTab(connectionId);
-    };
+    // const handleTabClick = (connectionId: string) => {
+    //     setActiveTab(connectionId);
+    // };
 
     useEffect(() => {
         setActiveTab(connectionId)

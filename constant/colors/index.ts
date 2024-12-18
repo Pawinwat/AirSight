@@ -1,4 +1,4 @@
-import { DagRun, DagState } from "src/types/airflow";
+import { DagState } from "src/types/airflow";
 
 
 export const STATE_COLORS: Record<string, string> = {

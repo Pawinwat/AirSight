@@ -7,7 +7,7 @@ import React from 'react';
 import { getInstanceStatus, getVersion } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import ConnectionCard from './components/ConnectionCard';
-import { MainPageProps } from './type';
+import { MainPageProps } from '../../types/main-page';
 
 export async function getServerSideProps() {
   // Fetch connections from the database
@@ -74,7 +74,7 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
       }}
     >
       {connections.map((item) => (
-        <ConnectionCard data={item} />
+        <ConnectionCard key={item.connection_id} data={item} />
       ))}
 
       {/* Add New Connection Card with Centered Icon */}

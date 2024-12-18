@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import router from 'next/router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
-import { ConnectionCardData } from '../type';
+import { ConnectionCardData } from '../../../types/main-page';
 import StatusChip from './StatusChip';
 import { InstanceStatus } from 'src/types/airflow';
 interface ConnectionCardProps {

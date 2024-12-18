@@ -1,24 +1,21 @@
 import { AxiosRequestConfig } from 'axios';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDags } from 'src/api/airflow';
+import { getTaskInstanceTries } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import { getBaseRequestConfig } from 'src/utils/request';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        const { connectionId, limit = '10', offset = '0', tags,  } = req.query;
+        const { dagId, connectionId, dagRunId, taskId  } = req.query;
         // Validate connectionId
         if (!connectionId || typeof connectionId !== 'string') {
             return res.status(400).json({ error: 'Invalid or missing connectionId' });
         }
 
-        // Parse limit and offset as integers
-        // const parsedLimit = parseInt(limit as string, 10);
-        // const parsedOffset = parseInt(offset as string, 10);
-
         // Fetch connections from the database
         const connections = await prisma.connection.findFirst({
             where: {
+                connection_id: connectionId,
                 is_active: true,
             },
         });
@@ -26,12 +23,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const config = {
             ...baseConfig,
             params: {
-                limit,
-                offset,
-                tags
+                // limit,
+                // offset,
+                // tags,
+                // order_by
             }
         } as AxiosRequestConfig
-        const dags = await getDags(config)
+        const dags = await getTaskInstanceTries(config, dagId as string,dagRunId as string,taskId as string)
 
         // Example response with the request headers and query params
         return res.status(200).json(dags);

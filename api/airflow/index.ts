@@ -39,7 +39,7 @@ export const getDags = async (config: AxiosRequestConfig) => {
  * @returns DAG details.
  */
 export const getDagDetails = async (config: AxiosRequestConfig, dagId: string) => {
-  const url  = `${config.baseURL}/api/v1/dags/${dagId}`
+  const url = `${config.baseURL}/api/v1/dags/${dagId}`
   const { data } = await axios.get(url, config);
   return data;
 };
@@ -162,7 +162,7 @@ export const updateDag = async (
  * @returns DAG details.
  */
 export const getDagSource = async (config: AxiosRequestConfig, fileToken: string) => {
-  const url  = `${config.baseURL}/api/v1/dagSources/${fileToken}`
+  const url = `${config.baseURL}/api/v1/dagSources/${fileToken}`
   console.log(url)
   const { data } = await axios.get(url, config);
   return data;
@@ -268,5 +268,27 @@ export const getLogConfig = async (config: AxiosRequestConfig) => {
  */
 export const getLogDetails = async (config: AxiosRequestConfig, logId: string) => {
   const { data } = await axios.get(`${config.baseURL}/api/v1/eventLogs/${logId}`, config);
+  return data;
+};
+
+
+/**
+ * Get task instances for a specific DAG run.
+ * @param config - Axios request configuration including baseURL and headers.
+ * @param dagId - The ID of the DAG.
+ * @param runId - The ID of the DAG run.
+ * @param taskId - The ID of the task.
+ * @returns List of task instances.
+ */
+export const getTaskInstanceTries = async (
+  config: AxiosRequestConfig,
+  dagId: string,
+  runId: string,
+  taskId: string
+) => {
+  const { data } = await axios.get(
+    `${config.baseURL}/api/v1/dags/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/tries`,
+    config
+  );
   return data;
 };

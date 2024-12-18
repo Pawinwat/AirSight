@@ -1,12 +1,12 @@
 import { AxiosRequestConfig } from 'axios';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDagRuns, getTaskInstances } from 'src/api/airflow';
+import { getTaskInstances } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import { getBaseRequestConfig } from 'src/utils/request';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        const { dagId, connectionId, dagRunId } = req.query;
+        const { dagId, connectionId, dagRunId, limit } = req.query;
         // Validate connectionId
         if (!connectionId || typeof connectionId !== 'string') {
             return res.status(400).json({ error: 'Invalid or missing connectionId' });
@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const config = {
             ...baseConfig,
             params: {
-                // limit,
+                limit,
                 // offset,
                 // tags,
                 // order_by

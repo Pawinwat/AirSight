@@ -8,14 +8,10 @@ import DagRunTemplate from "src/components/dag/DagRunTemplate";
 import prisma from "src/lib/prisma";
 import { pageVariants } from "src/transitions";
 import { AirflowDagRunsResponse, DagRun } from "src/types/airflow";
+import { ConnectionData } from "src/types/db";
 
 interface DashboardServerProps {
-  connection: {
-    connection_id: string;
-    name: string;
-    ui_url: string;
-    header: string;
-  };
+  connection: ConnectionData;
   dag_runs: DagRun[];
   total_entries: number;
 }

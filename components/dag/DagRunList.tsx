@@ -7,10 +7,10 @@ import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { DagRun } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import DagRunTemplate from './DagRunTemplate';
-interface TaskListProps {
+interface DagRunListProps {
     connection:ConnectionData
 }
-function TaskList({connection}:TaskListProps) {
+function DagRunList({connection}:DagRunListProps) {
     const {
         runData,
         handleDagRunClick,
@@ -79,4 +79,4 @@ function TaskList({connection}:TaskListProps) {
     )
 }
 
-export default TaskList
+export default DagRunList

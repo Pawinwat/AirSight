@@ -142,3 +142,28 @@ export const getLogDetails = async (
     const { data } = await localAxios.get(`/api/v1/eventLogs/${connectionId}/${logId}`, config);
     return data;
 };
+
+
+
+/**
+ * Get task instances for a specific DAG run.
+ * @param config - Axios request configuration including baseURL and headers.
+ * @param connectionId - The ID of the connection.
+ * @param dagId - The ID of the DAG.
+ * @param runId - The ID of the DAG run.
+ * @param taskId - The ID of the task.
+ * @returns List of task instances.
+ */
+export const getTaskInstanceTries = async (
+    config: AxiosRequestConfig,
+    connectionId: string,
+    dagId: string,
+    runId: string,
+    taskId: string
+) => {
+    const { data } = await localAxios.get(
+        `/api/v1/dags/${connectionId}/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/tries`,
+        config
+    );
+    return data;
+};

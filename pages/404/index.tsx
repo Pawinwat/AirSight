@@ -22,7 +22,7 @@ const Custom404: React.FC = () => {
     >
       <h1 style={{ fontSize: '3rem', fontWeight: 'bold' }}>404 - Page Not Found</h1>
       <p style={{ fontSize: '1.5rem' }}>
-        Sorry, the page you're looking for does not exist.
+        Sorry, the page you&apos;re looking for does not exist.
       </p>
       <Button label="Go Home" icon="pi pi-home" onClick={handleGoHome} />
     </div>

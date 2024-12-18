@@ -7,6 +7,7 @@ import 'primereact/resources/themes/lara-dark-indigo/theme.css'; // PrimeReact t
 import { Suspense } from 'react';
 import './app.css'; // Custom CSS file
 import { DagRunsProvider } from 'src/contexts/useDagsRuns';
+import ContextWrapper from 'src/components/wrapper/ContextWrapper';
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   const queryClient = new QueryClient({
@@ -20,6 +21,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <DagRunsProvider>
+        <ContextWrapper>
         <Suspense fallback={<div>Loading...</div>}>
           {/* <Navbar /> Navbar will stay static on all pages */}
           <motion.div
@@ -32,6 +34,7 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
             <Component {...pageProps} />
           </motion.div>
         </Suspense>
+        </ContextWrapper>
       </DagRunsProvider>
     </QueryClientProvider>
   );

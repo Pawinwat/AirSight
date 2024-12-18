@@ -1,14 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from 'src/lib/prisma';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { limit = '10', offset = '0', tags, only_active } = req.query;
+    // const { limit = '10', offset = '0', tags, only_active } = req.query;
 
 
     // Parse limit and offset as integers
-    const parsedLimit = parseInt(limit as string, 10);
-    const parsedOffset = parseInt(offset as string, 10);
+    // const parsedLimit = parseInt(limit as string, 10);
+    // const parsedOffset = parseInt(offset as string, 10);
 
     // Fetch connections from the database
     const connections = await prisma.connection.findMany({

@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from 'axios';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDagRuns, getTaskInstanceLogs, getTaskInstances } from 'src/api/airflow';
+import { getTaskInstanceLogs } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import { getBaseRequestConfig } from 'src/utils/request';
 

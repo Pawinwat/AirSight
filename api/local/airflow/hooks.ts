@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { AxiosRequestConfig } from "axios";
-import { getDagRuns, getTaskInstanceLogs, getTaskInstances } from ".";
+import { getDagRuns, getTaskInstanceLogs, getTaskInstances, getTaskInstanceTries } from ".";
 import { AirflowDagRunsResponse, AirflowTaskInstanceResponse } from "src/types/airflow";
 
 export const useDagRuns = (config: AxiosRequestConfig, connectionId: string|null, dagId: string|null) => {
@@ -23,5 +23,12 @@ export const useTaskInstanceLogs = (config: AxiosRequestConfig, connectionId: st
     return useQuery<string>({
         queryKey: ['useTaskInstanceLogs', connectionId, dagId, config, dagRunId,taskId,taskTryNumber],
         queryFn: () => getTaskInstanceLogs(config, connectionId, dagId, dagRunId,taskId,taskTryNumber),
+    });
+};
+
+export const useTaskInstanceTries = (config: AxiosRequestConfig, connectionId: string, dagId: string, dagRunId: string,taskId:string) => {
+    return useQuery<string>({
+        queryKey: ['useTaskInstanceLogs', connectionId, dagId, config, dagRunId,taskId],
+        queryFn: () => getTaskInstanceTries(config, connectionId, dagId, dagRunId,taskId),
     });
 };

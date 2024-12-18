@@ -1,9 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import axios from 'axios';
-import { useDagRuns, useTaskInstances } from 'src/api/local/airflow/hooks';
-import { ConnectionData } from 'src/types/db';
 import { useRouter } from 'next/router';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
+import { useDagRuns, useTaskInstances } from 'src/api/local/airflow/hooks';
 import { DagRun, TaskInstance } from 'src/types/airflow';
+import { ConnectionData } from 'src/types/db';
 
 
 interface DagRunsContextValues {
@@ -55,7 +54,7 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
 
     const runParams = {
         offset: 0,
-        limit: 100,
+        limit: 200,
         order_by: '-execution_date',
 
     }
@@ -82,7 +81,7 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
     const taskInstanceData = taskInstance?.data?.task_instances
     ?.map(task => ({ ...task, dag_run_id: selectedRun?.dag_run_id as string }))
 
-
+    
     return (
         <DagRunsContext.Provider value={{
             connection, setConnection,
@@ -93,7 +92,8 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
             handleStatusFilterClick,
             selectedRunsTags, setSelectedRunsTags,
             selectedRun, setSelectedRun,
-            taskInstanceData
+            taskInstanceData,
+            
         }}>
             {children}
         </DagRunsContext.Provider>

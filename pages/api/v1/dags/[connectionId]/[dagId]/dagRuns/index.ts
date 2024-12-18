@@ -6,16 +6,15 @@ import { getBaseRequestConfig } from 'src/utils/request';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        const { dagId, connectionId, limit = '10', offset = '0', tags, only_active, order_by } = req.query;
+        const { dagId, connectionId, limit = '10', offset = '0', tags,  order_by } = req.query;
         // Validate connectionId
         if (!connectionId || typeof connectionId !== 'string') {
             return res.status(400).json({ error: 'Invalid or missing connectionId' });
         }
 
         // Parse limit and offset as integers
-        const parsedLimit = parseInt(limit as string, 10);
-        const parsedOffset = parseInt(offset as string, 10);
-
+        // const parsedLimit = parseInt(limit as string, 10);
+        // const parsedOffset = parseInt(offset as string, 10);
         // Fetch connections from the database
         const connections = await prisma.connection.findFirst({
             where: {

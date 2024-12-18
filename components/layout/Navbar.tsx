@@ -1,7 +1,5 @@
-import React from 'react';
-import Link from 'next/link';
-import { Button } from 'primereact/button'; // PrimeReact Button for navbar items
 import { Menubar } from 'primereact/menubar'; // PrimeReact Menubar for navigation
+import React from 'react';
 
 const Navbar: React.FC = () => {
     // Defining menu items for the Menubar component

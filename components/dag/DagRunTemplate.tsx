@@ -1,11 +1,11 @@
+import Link from 'next/link';
 import { Card } from 'primereact/card';
-import React, { CSSProperties } from 'react'
+import { CSSProperties } from 'react';
 import { getRunTypeColor, getStatusColor } from 'src/constant/colors';
+import { PATH } from 'src/routes';
 import { DagRun } from 'src/types/airflow';
 import { CARD_GAP } from '../layout/constants';
-import { MenuItemOptions } from 'primereact/menuitem';
-import Link from 'next/link';
-import { PATH } from 'src/routes';
+import { ConnectionData } from 'src/types/db';
 
 const styles: Record<string, CSSProperties> = {
     listItem: {
@@ -42,7 +42,7 @@ const styles: Record<string, CSSProperties> = {
     },
 };
 type TemplateOption = 'list' | 'grid' | (string & Record<string, unknown>)
-const DagRunTemplate = (items: DagRun[], options?: TemplateOption, onClick?: (_: DagRun) => void, externalProps?: Record<string, any>) => {
+const DagRunTemplate = (items: DagRun[], _options?: TemplateOption, _onClick?: (_: DagRun) => void, externalProps?: Record<string, ((run:DagRun) =>void)|boolean|string|number|ConnectionData>) => {
     const paddedItems = [
         ...items,
         ...Array(Math.max(0, 5 - (items?.length || 0))).fill(null), // Pad with null values for empty rows
@@ -50,18 +50,18 @@ const DagRunTemplate = (items: DagRun[], options?: TemplateOption, onClick?: (_:
 
     const list = paddedItems.map((run, index) => (
         <Card
-            className={externalProps?.selected && externalProps?.selected(run) ? "p-card-item-hover" : "p-card-item"}
+            className={externalProps?.selected && (externalProps?.selected instanceof Function) && (externalProps)?.selected(run) ? "p-card-item-hover" : "p-card-item"}
             key={index}
             style={styles.listItem}
             onClick={() => {
-                onClick && onClick(run)
+                // onClick && onClick(run)
             }}
         >
             {run ? (
                 <div style={{ display: 'flex', flexDirection: 'row', gap: CARD_GAP, justifyContent: 'space-between', width: "100%" }}>
                     <div>
                         <Link
-                            href={PATH.mainDagId(externalProps?.connection?.connection_id, run.dag_id)}
+                            href={PATH.mainDagId((externalProps?.connection as ConnectionData)?.connection_id, run.dag_id)}
                             style={{ textDecoration: 'none', ...styles.dagId }}
                         >
                             {run.dag_id}
