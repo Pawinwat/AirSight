@@ -3,10 +3,11 @@ import { AxiosRequestConfig } from "axios";
 import { getDagRuns, getTaskInstanceLogs, getTaskInstances } from ".";
 import { AirflowDagRunsResponse, AirflowTaskInstanceResponse } from "src/types/airflow";
 
-export const useDagRuns = (config: AxiosRequestConfig, connectionId: string, dagId: string) => {
+export const useDagRuns = (config: AxiosRequestConfig, connectionId: string|null, dagId: string|null) => {
     return useQuery<AirflowDagRunsResponse>({
         queryKey: ['dagRuns', connectionId, dagId, config],
-        queryFn: () => getDagRuns(config, connectionId, dagId),
+        queryFn: () => getDagRuns(config, connectionId  as string, dagId as string),
+        enabled:!!dagId && !!connectionId
     });
 };
 
@@ -14,6 +15,7 @@ export const useTaskInstances = (config: AxiosRequestConfig, connectionId: strin
     return useQuery<AirflowTaskInstanceResponse>({
         queryKey: ['TaskInstances', connectionId, dagId, config, dagRunId],
         queryFn: () => getTaskInstances(config, connectionId, dagId, dagRunId),
+        enabled:!!connectionId && !!dagId
     });
 };
 

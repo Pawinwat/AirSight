@@ -1,12 +1,12 @@
 import { GetServerSideProps } from 'next';
 import { Chart } from 'primereact/chart';
 import { InputTextarea } from 'primereact/inputtextarea';
-import React, { useState } from 'react';
+import React from 'react';
 import { getDagDetails, getDagRuns, getDagSource, getTaskInstances } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import { Dag, DagRun, DagState, TaskInstance } from 'src/types/airflow';
 
-import { AxiosHeaders, AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import {
     CategoryScale,
     Chart as ChartJS, // For time-based x-axis
@@ -20,21 +20,20 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns'; // Ensure the adapter is installed
 import Link from 'next/link';
+import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Card } from 'primereact/card';
-import { DataView } from 'primereact/dataview';
 import { MenuItem } from 'primereact/menuitem';
 import { Tag } from 'primereact/tag';
 import Breadcrumbs from 'src/components/breadcrumb/Breadcrumbs';
-import DagRunTemplate from 'src/components/dag/DagRunTemplate';
+import TaskList from 'src/components/dag/TaskList';
+import TaskLog from 'src/components/dag/TaskLog';
+import { CARD_GAP } from 'src/components/layout/constants';
 import PageFrame from 'src/components/layout/PageFrame';
+import { getStatusColor } from 'src/constant/colors';
+import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { PATH } from 'src/routes';
 import { ConnectionData } from 'src/types/db';
-import { getStatusColor } from 'src/constant/colors';
-import { CARD_GAP } from 'src/components/layout/constants';
 import { getBaseRequestConfig } from 'src/utils/request';
-import { useTaskInstances } from 'src/api/local/airflow/hooks';
-import { Accordion, AccordionTab } from 'primereact/accordion';
-import TaskLog from 'src/components/dag/TaskLog';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale);
 
@@ -98,7 +97,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
 
 const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagSource, connection }) => {
     // Map status to colors
-
+    const { taskInstanceData } = useDagRunsContext()
     // Prepare data for the scatter plot
     const scatterData = dag_runs
         .filter((run) => run.start_date && run.end_date) // Ensure dates exist
@@ -172,20 +171,8 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
         }
 
     ];
-    const [selectedRun, setSelectedRun] = useState<DagRun | null>(null)
 
-    const handleDagRunClick = (run: DagRun) => {
-        setSelectedRun(
-            (prev) => prev?.dag_run_id == run.dag_run_id ? null : run
-        )
-    }
-    const taskInstance = useTaskInstances(
-        {},
-        connection?.connection_id,
-        selectedRun?.dag_id as string,
-        selectedRun?.dag_run_id as string
-    )
-    const taskInstanceData = taskInstance?.data?.task_instances
+
 
     return (
         <PageFrame>
@@ -259,17 +246,8 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
                         width: '40%'
                     }}
                 >
-                    <DataView
-                        value={dag_runs}
-                        listTemplate={(item, option) =>
-                            DagRunTemplate(
-                                item,
-                                option,
-                                handleDagRunClick,
-                                {
-                                    selected: (run: DagRun) => run?.dag_run_id && (run?.dag_run_id == selectedRun?.dag_run_id)
-                                })}
-                        paginator rows={5}
+                    <TaskList
+                        connection={connection}
                     />
                 </Card>
                 <div
@@ -278,32 +256,32 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
                         height: '100%'
                     }}
                 >
-            <Accordion
-            >
+                    <Accordion
+                    >
 
-              {
-                taskInstanceData?.map(t => (
-                  <AccordionTab
-                    key={t.dag_run_id}
+                        {
+                            taskInstanceData?.map(t => (
+                                <AccordionTab
+                                    key={t.dag_run_id}
 
-                    header={
-                      <div
-                        style={{
-                          gap: '20px'
-                        }}
-                      >
-                        <i className={`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: getStatusColor(t.state as DagState) }}></i>
-                        {t.task_id}
-                      </div>}>
+                                    header={
+                                        <div
+                                            style={{
+                                                gap: '20px'
+                                            }}
+                                        >
+                                            <i className={`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: getStatusColor(t.state as DagState) }}></i>
+                                            {t.task_id}
+                                        </div>}>
 
-                    <TaskLog
-                      connection={connection}
-                      taskInstance={t}
-                    />
-                  </AccordionTab>
-                ))
-              }
-            </Accordion>
+                                    <TaskLog
+                                        connection={connection}
+                                        taskInstance={t}
+                                    />
+                                </AccordionTab>
+                            ))
+                        }
+                    </Accordion>
                 </div>
             </div>
         </PageFrame>

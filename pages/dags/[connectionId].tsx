@@ -8,21 +8,20 @@ import { Checkbox } from 'primereact/checkbox';
 import { Chip } from 'primereact/chip';
 import { Column, ColumnBodyOptions } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
-import { DataView } from 'primereact/dataview';
 import { Dropdown } from 'primereact/dropdown';
 import { Skeleton } from 'primereact/skeleton';
 import { Tag } from 'primereact/tag';
 import { JSX, useEffect, useState } from 'react';
 import { getDags } from 'src/api/airflow';
-import { useDagRuns, useTaskInstances } from 'src/api/local/airflow/hooks';
-import DagRunTemplate from 'src/components/dag/DagRunTemplate';
+import TaskList from 'src/components/dag/TaskList';
 import TaskLog from 'src/components/dag/TaskLog';
 import { CARD_GAP } from 'src/components/layout/constants';
 import PageFrame from 'src/components/layout/PageFrame';
-import { getStatusColor, STATE_COLORS } from 'src/constant/colors';
+import { getStatusColor } from 'src/constant/colors';
+import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import prisma from 'src/lib/prisma';
 import { PATH } from 'src/routes';
-import { AirflowDagsResponse, Dag, DagRun, DagState, TaskInstance } from 'src/types/airflow';
+import { AirflowDagsResponse, Dag, DagState } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import { getBaseRequestConfig } from 'src/utils/request';
 import ConnectionSelector from './components/ConnectionSelector';
@@ -79,11 +78,9 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
 export default function DagsPage({ connection, dags, connections }: DagsServerProps) {
   const router = useRouter();
   const { query } = router;
-
+  const { taskInstanceData } = useDagRunsContext()
   const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
   const [loading, setLoading] = useState(false);
-  const [selectedRun, setSelectedRun] = useState<DagRun | null>(null)
-  const [selectedTask, setSelectedTask] = useState<TaskInstance | null>(null)
   // Pagination variables
   const [limit, setLimit] = useState(parseInt((query.limit as string) || '10', 10));
   const offset = parseInt((query.offset as string) || '0', 10);
@@ -176,61 +173,8 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
     });
   };
 
-  const handleViewDag = (dagId: string) => {
-    router.push({
-      pathname: PATH.mainDagId(connection.connection_id, dagId)
-    }
-    )
-
-  }
-
-  const handleStatusFilterClick = (status: string) => {
-    const newTags = selectedRunsTags.includes(status)
-      ? selectedRunsTags.filter((t) => t !== status)
-      : [...selectedRunsTags, status];
-    setSelectedRunsTags(newTags);
-    // updateQueryParams(0, limit, newTags, onlyActive);
-  };
-
-  const handleDagRunClick = (run: DagRun) => {
-    setSelectedRun(
-      (prev) => prev?.dag_run_id == run.dag_run_id ? null : run
-    )
-  }
-
-  const runParams = {
-    offset: 0,
-    limit: 100,
-    order_by: '-execution_date',
-
-  }
-  const dagRuns = useDagRuns({
-    params: runParams
-  },
-    connection?.connection_id,
-    `~`
-  )
 
 
-  const dagRunsData = dagRuns?.data?.dag_runs
-  const runData = dagRunsData?.filter(run => (selectedRunsTags?.length === 0) || selectedRunsTags.includes(run.state)) || []
-  const runStat = dagRunsData?.reduce((acc, run) => {
-    acc[run.state] = (acc[run.state] || 0) + 1; // Increment the count for the state
-    return acc;
-  }, {} as Record<string, number>);
-
-
-  const taskInstance = useTaskInstances(
-    {},
-    connection?.connection_id,
-    selectedRun?.dag_id as string,
-    selectedRun?.dag_run_id as string
-  )
-  const taskInstanceData = taskInstance
-  ?.data
-  ?.task_instances
-  ?.map(task=>({...task,dag_run_id:selectedRun?.dag_run_id as string}))
-  // Initialize an empty object
   const mainBodyTemplate = (rowData: Dag) => {
     return (
       <div className="card flex flex-column gap-2" style={{ gap: 10 }}>
@@ -368,60 +312,8 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
             width: '40%'
           }}
         >
-          <DataView
-            value={runData}
-            listTemplate={(item, option) =>
-              DagRunTemplate(
-                item,
-                option,
-                handleDagRunClick,
-                {
-                  selected: (run: DagRun) => {
-                    return run && !!(run?.dag_run_id == selectedRun?.dag_run_id)
-                  },
-                  connection
-                })}
-            paginator
-            rows={5}
-            emptyMessage="No run"
-            header={
-              <div
-                style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
-              >
-                <p>
-                  Recent
-                </p>
-                <div
-                  style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}
-                >
-                  {Object.keys(STATE_COLORS).map((statusKey) => (
-                    <Tag
-                      key={`tag-${statusKey}`}
-                      style={{
-                        backgroundColor: STATE_COLORS[statusKey],
-                        cursor: 'pointer',
-                        transform: selectedRunsTags.includes(statusKey)
-                          ? 'translateY(var(--translate-y)) translateX(var(--translate-x))'
-                          : 'none',
-                        boxShadow: selectedRunsTags.includes(statusKey)
-                          ? 'var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color)'
-                          : 'none',
-                      }}
-                      onClick={() => handleStatusFilterClick(statusKey)}
-                    >
-                      {statusKey}{`(${runStat?.[statusKey] || 0})`}
-                    </Tag>
-                  ))}
-                </div>
-                <Button
-                  icon={dagRuns?.isFetching ? 'pi pi-spin pi-refresh' : 'pi pi-refresh'}
-                  onClick={() => {
-                    dagRuns?.refetch()
-                  }}
-                />
-                <Checkbox checked />
-              </div>
-            }
+          <TaskList
+            connection={connection}
           />
 
         </div>
@@ -431,10 +323,8 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
             height: '100%'
           }}
         >
-
           <Accordion
           >
-
             {
               taskInstanceData?.map(t => (
                 <AccordionTab
@@ -449,7 +339,6 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
                       <i className={`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: getStatusColor(t.state as DagState) }}></i>
                       {t.task_id}
                     </div>}>
-
                   <TaskLog
                     connection={connection}
                     taskInstance={t}
