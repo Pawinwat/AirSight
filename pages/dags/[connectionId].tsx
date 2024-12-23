@@ -18,7 +18,6 @@ import RunDagButton from 'src/components/dag/RunDagButton';
 import { CARD_GAP } from 'src/components/layout/constants';
 import PageFrame from 'src/components/layout/PageFrame';
 import TaskInstanceView from 'src/components/task/TaskInstanceView';
-import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { useDebounceEffect } from 'src/hooks/useDebounceEffect';
 import prisma from 'src/lib/prisma';
 import { PATH } from 'src/routes';
@@ -38,7 +37,11 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
   const { connectionId } = params as { connectionId: string };
   const limit = parseInt((query.limit as string) || '10', 10); // Default 10 items per page
   const offset = parseInt((query.offset as string) || '0', 10); // Default 0 offset
-  const { tags, search } = query;
+  const {
+    tags,
+    search,
+    // only_active
+  } = query;
   const connections = await prisma.connection.findMany({
     where: {
       is_active: true,
@@ -54,18 +57,16 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
       limit,
       offset,
       tags: tags || null,
-      // paused: only_active || null,
+      // only_active: (only_active == 'true') ? 'true' : null,
       dag_id_pattern: search || null
     },
     ...baseConfig
   };
-
   const [
     data
   ] = await Promise.all([
     getDags(config),
   ])
-  // console.log(data)
   return {
     props: {
       connection,
@@ -79,10 +80,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
 export default function DagsPage({ connection, dags, connections }: DagsServerProps) {
   const router = useRouter();
   const { query } = router;
-  const { setConnection } = useDagRunsContext()
-  useEffect(() => {
-    setConnection(connection)
-  }, [connection?.connection_id])
+
 
   const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
   const [loading, setLoading] = useState(false);
@@ -316,6 +314,8 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
           width: '100%',
           gap: CARD_GAP,
           marginTop: CARD_GAP,
+          maxHeight:'80vh'
+
         }}
 
       >
@@ -333,7 +333,7 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
           style={{
             width: '60%',
             height: '100%',
-            // overflowY:'scroll'
+            overflowY:'scroll'
           }}
         >
           <TaskInstanceView />

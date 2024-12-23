@@ -167,3 +167,28 @@ export const getTaskInstanceTries = async (
     );
     return data;
 };
+
+
+
+/**
+ * Trigger a DAG run.
+ * @param config - Axios request configuration including baseURL and headers.
+ * @param connectionId - The ID of the connection.
+ * @param dagId - The ID of the DAG to be triggered.
+ * @param payload - Additional parameters for the DAG run.
+ * @returns The triggered DAG run details.
+ */
+export const triggerDag = async (
+    config: AxiosRequestConfig,
+    connectionId: string,
+    dagId: string,
+    payload: Record<string, any>
+  ) => {
+    const { data } = await localAxios.post(
+      `/api/v1/dags/${connectionId}/${dagId}/dagRuns`,
+      payload,
+      config
+    );
+    return data;
+  };
+  

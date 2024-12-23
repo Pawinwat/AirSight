@@ -5,6 +5,7 @@ import { Card } from 'primereact/card';
 import { ConnectionCardData } from '../../../types/main-page';
 import StatusChip from './StatusChip';
 import { InstanceStatus } from 'src/types/airflow';
+import { PATH } from 'src/routes';
 interface ConnectionCardProps {
     data: ConnectionCardData
 }
@@ -20,6 +21,11 @@ function ConnectionCard({ data }: ConnectionCardProps) {
         const targetUrl = `/dags${!!connectionId ? `/${connectionId}` : ''}`;
         router.push(targetUrl); // Navigate to the /config page
     };
+
+
+    const handleConfigClick = (connectionId:string)=>{
+        router.push(PATH.config(connectionId));
+    } 
 
     return (
         <motion.div
@@ -65,7 +71,7 @@ function ConnectionCard({ data }: ConnectionCardProps) {
                     }
                 </div>
                 <>
-                    {data.version.version}
+                    {data?.version?.version}
                 </>
                 <div className="button-container">
                     <Button
@@ -80,7 +86,8 @@ function ConnectionCard({ data }: ConnectionCardProps) {
                     />
                     <Button
                         onClick={(e) => {
-                            // handleAddClick(data.connection_id);
+                            handleConfigClick(data.connection_id);
+                            console.log('handleAddClick')
                             e.stopPropagation();
                         }}
                         icon="pi pi-cog"

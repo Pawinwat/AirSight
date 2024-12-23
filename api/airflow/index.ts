@@ -56,12 +56,19 @@ export const triggerDag = async (
   dagId: string,
   payload: Record<string, any>
 ) => {
-  const { data } = await axios.post(
-    `${config.baseURL}/api/v1/dags/${dagId}/dagRuns`,
-    payload,
-    config
-  );
-  return data;
+  // const url = `${config.baseURL}/api/v1/dags/${dagId}/dagRuns`
+  try {
+
+    const { data } = await axios.post(
+      `${config.baseURL}/api/v1/dags/${dagId}/dagRuns`,
+      payload,
+      config
+    );
+    return data;
+  }
+  catch (e: any) {
+    return e.response.data
+  }
 };
 
 /**

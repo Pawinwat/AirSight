@@ -1,11 +1,20 @@
-export type InstanceStatus = {
-  metadatabase?: { status: string };
-  scheduler?: { status: string; latest_scheduler_heartbeat?: string };
-  triggerer?: { status: string; latest_triggerer_heartbeat?: string };
-  dag_processor?: { status: string; latest_dag_processor_heartbeat?: string };
-};
+export type InstanceStatusValue = "healthy" | "unhealthy"
+export type InstanceStatus = Record<string, {
+  status: InstanceStatusValue,
+} & {
+  [key: string]: string
+}>
+// export type InstanceStatus = {
+//   metadatabase?: { status: string };
+//   scheduler?: { status: string; latest_scheduler_heartbeat?: string };
+//   triggerer?: { status: string; latest_triggerer_heartbeat?: string };
+//   dag_processor?: { status: string; latest_dag_processor_heartbeat?: string };
+// };
 
-
+export interface AirflowVersion {
+  "version": "string",
+  "git_version": "string"
+}
 export interface Dag {
   dag_id: string;
   dag_display_name: string;
@@ -49,7 +58,7 @@ export interface AirflowDagRunsResponse {
   dag_runs: DagRun[];
   total_entries: number;
 }
-export type DagState = 'success' | 'failed' | 'running' | 'queued' | 'upstream_failed' | 'skipped' | 'none'; 
+export type DagState = 'success' | 'failed' | 'running' | 'queued' | 'upstream_failed' | 'skipped' | 'none' |'up_for_retry'|'up_for_reschedule'|'scheduled';
 
 export interface DagRun {
   conf: Record<string, unknown>; // Represents an object with any key-value pairs

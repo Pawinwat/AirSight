@@ -42,7 +42,7 @@ const styles: Record<string, CSSProperties> = {
     },
 };
 type TemplateOption = 'list' | 'grid' | (string & Record<string, unknown>)
-const DagRunTemplate = (items: DagRun[], _options?: TemplateOption, _onClick?: (_: DagRun) => void, externalProps?: Record<string, ((run:DagRun) =>void)|boolean|string|number|ConnectionData>) => {
+const DagRunTemplate = (items: DagRun[], _options?: TemplateOption, onClick?: (_: DagRun) => void, externalProps?: Record<string, ((run:DagRun) =>void)|boolean|string|number|ConnectionData>) => {
     const paddedItems = [
         ...items,
         ...Array(Math.max(0, 5 - (items?.length || 0))).fill(null), // Pad with null values for empty rows
@@ -54,7 +54,9 @@ const DagRunTemplate = (items: DagRun[], _options?: TemplateOption, _onClick?: (
             key={index}
             style={styles.listItem}
             onClick={() => {
-                // onClick && onClick(run)
+                if (!!onClick) {
+                    onClick(run);
+                }
             }}
         >
             {run ? (

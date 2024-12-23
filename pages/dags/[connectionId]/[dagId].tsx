@@ -232,6 +232,7 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
                     width: '100%',
                     gap: CARD_GAP,
                     marginTop: CARD_GAP,
+                    // maxHeight:'80vh'
                 }}
 
             >
@@ -247,7 +248,10 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
                 <div
                     style={{
                         width: '60%',
-                        height: '100%'
+                        height: '100%',
+                        maxHeight:'80vh',
+
+                        // overflowY:'scroll'
                     }}
                 >
                   <TaskInstanceView/>

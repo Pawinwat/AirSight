@@ -1,4 +1,3 @@
-'use server'
 import { AxiosHeaders } from 'axios';
 import { motion } from 'framer-motion'; // Import Framer Motion
 import { useRouter } from 'next/router'; // Import the useRouter hook
@@ -8,6 +7,7 @@ import { getInstanceStatus, getVersion } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import ConnectionCard from './components/ConnectionCard';
 import { MainPageProps } from '../../types/main-page';
+import { PATH } from 'src/routes';
 
 export async function getServerSideProps() {
   // Fetch connections from the database
@@ -23,7 +23,6 @@ export async function getServerSideProps() {
       header: true,
     },
   });
-
   // Fetch instance status for each connection and append it
   const connectionsWithStatus = await Promise.all(
     connections.map(async (con) => {
@@ -32,14 +31,12 @@ export async function getServerSideProps() {
           baseURL: con.api_url as string,
           headers: con.header as AxiosHeaders
         }
-      
-
         );
         const version = await getVersion({
           baseURL: con.api_url as string,
           headers: con.header as AxiosHeaders
         })
-        return { ...con, status,version }; // Append the status to the connection object
+        return { ...con, status, version }; // Append the status to the connection object
       } catch (error) {
         console.error(`Error fetching status for connection ${con.connection_id}:`, error);
         return { ...con, status: 'Error' }; // Handle errors by appending a default error status
@@ -56,8 +53,8 @@ export async function getServerSideProps() {
 
 const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
   const router = useRouter(); // Initialize the useRouter hook
-  const handleAddClick = (connectionId?: number | string) => {
-    const targetUrl = `/config${!!connectionId ? `/${connectionId}` : ''}`;
+  const handleAddClick = (connectionId?:  string) => {
+    const targetUrl = PATH.config(connectionId as string)
     router.push(targetUrl); // Navigate to the /config page
   };
 

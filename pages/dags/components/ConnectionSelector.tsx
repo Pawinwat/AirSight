@@ -72,6 +72,9 @@ function ConnectionSelector({ connections }: ConnectionSelectorProps) {
                 </Button>
             ))}
             <Button
+            onClick={()=>{
+                router.push(PATH.config(''), { scroll: false })
+            }}
                 icon="pi pi-plus"
             />
         </div>

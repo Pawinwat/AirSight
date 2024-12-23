@@ -2,15 +2,15 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataView } from 'primereact/dataview';
 import { Tag } from 'primereact/tag';
-import { STATE_COLORS } from 'src/constant/colors';
+import { getStatusColor, getStatusIcon, STATE_COLORS } from 'src/constant/colors';
 import { useDagRunsContext } from 'src/contexts/useDagsRuns';
-import { DagRun } from 'src/types/airflow';
+import { DagRun, DagState } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import DagRunTemplate from './DagRunTemplate';
 interface DagRunListProps {
-    connection:ConnectionData
+    connection: ConnectionData
 }
-function DagRunList({connection}:DagRunListProps) {
+function DagRunList({ connection }: DagRunListProps) {
     const {
         runData,
         handleDagRunClick,
@@ -49,9 +49,10 @@ function DagRunList({connection}:DagRunListProps) {
                     >
                         {Object.keys(STATE_COLORS).map((statusKey) => (
                             <Tag
+                            icon={getStatusIcon(statusKey as DagState)}
                                 key={`tag-${statusKey}`}
                                 style={{
-                                    backgroundColor: STATE_COLORS[statusKey],
+                                    backgroundColor: getStatusColor(statusKey as DagState),
                                     cursor: 'pointer',
                                     transform: selectedRunsTags.includes(statusKey)
                                         ? 'translateY(var(--translate-y)) translateX(var(--translate-x))'
@@ -70,6 +71,11 @@ function DagRunList({connection}:DagRunListProps) {
                         icon={dagRuns?.isFetching ? 'pi pi-spin pi-refresh' : 'pi pi-refresh'}
                         onClick={() => {
                             dagRuns?.refetch()
+                        }}
+                        disabled={dagRuns?.isFetching}
+                        style={{
+                            width: '40px',
+                            height: '20px'
                         }}
                     />
                     <Checkbox checked />
