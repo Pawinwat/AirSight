@@ -170,7 +170,6 @@ export const updateDag = async (
  */
 export const getDagSource = async (config: AxiosRequestConfig, fileToken: string) => {
   const url = `${config.baseURL}/api/v1/dagSources/${fileToken}`
-  console.log(url)
   const { data } = await axios.get(url, config);
   return data;
 };

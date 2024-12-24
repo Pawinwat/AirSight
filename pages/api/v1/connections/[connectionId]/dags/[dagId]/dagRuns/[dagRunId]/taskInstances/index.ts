@@ -1,10 +1,10 @@
 import { AxiosRequestConfig } from 'axios';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getTaskInstances } from 'src/api/airflow';
-import prisma from 'src/lib/prisma';
+import { getConnectionById } from 'src/db/connection';
 import { getBaseRequestConfig } from 'src/utils/request';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function taskInstancesHandler(req: NextApiRequest, res: NextApiResponse) {
     try {
         const { dagId, connectionId, dagRunId, limit } = req.query;
         // Validate connectionId
@@ -13,13 +13,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // Fetch connections from the database
-        const connections = await prisma.connection.findFirst({
-            where: {
-                connection_id: connectionId,
-                is_active: true,
-            },
-        });
-        const baseConfig = getBaseRequestConfig(connections)
+        const connection = await getConnectionById(connectionId)
+
+        const baseConfig = getBaseRequestConfig(connection)
         const config = {
             ...baseConfig,
             params: {

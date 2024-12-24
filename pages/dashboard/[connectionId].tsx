@@ -5,7 +5,7 @@ import { Card } from "primereact/card";
 import { DataView } from 'primereact/dataview';
 import { getDagRuns } from "src/api/airflow";
 import DagRunTemplate from "src/components/dag/DagRunTemplate";
-import prisma from "src/lib/prisma";
+import { getConnectionById } from "src/db/connection";
 import { pageVariants } from "src/transitions";
 import { AirflowDagRunsResponse, DagRun } from "src/types/airflow";
 import { ConnectionData } from "src/types/db";
@@ -22,12 +22,8 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
   const { connectionId } = params as { connectionId: string };
   const limit = parseInt((query.limit as string) || '10', 10); // Default 10 items per page
   const offset = parseInt((query.offset as string) || '0', 10); // Default 0 offset
-  const connection = await prisma.connection.findFirst({
-    where: {
-      connection_id: connectionId,
-      is_active: true,
-    },
-  });
+  const connection = await getConnectionById(connectionId)
+
 
   if (!connection || !connection.api_url || !connection.header) {
     return { notFound: true };

@@ -1,5 +1,5 @@
 // components/PipelineEye.tsx
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import BaseEChart from '../charts/base/Echart';
 import * as echarts from 'echarts';
 import { SeriesOption } from 'echarts';
@@ -24,8 +24,10 @@ const generateTimeLabels = (numBars: number): string[] => {
 
   return labels;
 };
-
-const PipelineEye: React.FC = () => {
+interface PipelineEyeProps{
+  style?:CSSProperties
+}
+const PipelineEye: React.FC<PipelineEyeProps> = ({style}:PipelineEyeProps) => {
   const numBars = 120;
   const randomData = generateRandomData(numBars);
   const timeLabels = generateTimeLabels(numBars);
@@ -80,7 +82,7 @@ const PipelineEye: React.FC = () => {
   };
 
   return (
-      <BaseEChart option={option} style={{ height: '180px',width: '250px', }} />
+      <BaseEChart option={option} style={{ height: '180px',width: '250px',...style }} />
   );
 };
 

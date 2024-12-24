@@ -1,10 +1,10 @@
 import { AxiosRequestConfig } from 'axios';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getDagRuns, triggerDag } from 'src/api/airflow';
-import prisma from 'src/lib/prisma';
+import { getConnectionById } from 'src/db/connection';
 import { getBaseRequestConfig } from 'src/utils/request';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function dagRunsHandler(req: NextApiRequest, res: NextApiResponse) {
     try {
         const { dagId, connectionId, limit = '10', offset = '0', tags, order_by } = req.query;
 
@@ -12,15 +12,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!connectionId || typeof connectionId !== 'string') {
             return res.status(400).json({ error: 'Invalid or missing connectionId' });
         }
-        const connections = await prisma.connection.findFirst({
-            where: {
-                connection_id: connectionId,
-                is_active: true,
-            },
-        });
+        const connection = await getConnectionById(connectionId)
+
         const parsedLimit = parseInt(limit as string, 10);
         const parsedOffset = parseInt(offset as string, 10);
-        const baseConfig = getBaseRequestConfig(connections);
+        const baseConfig = getBaseRequestConfig(connection);
         const config: AxiosRequestConfig = {
             ...baseConfig,
             params: {
@@ -32,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         };
 
         // If no connection found, return an error
-        if (!connections) {
+        if (!connection) {
             return res.status(404).json({ error: 'Connection not found' });
         }
 
@@ -44,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         else if (req.method === 'POST') {
             // return res.status(200).json({'post':req.body});
-            const dags = await triggerDag(baseConfig, dagId as string,req.body);
+            const dags = await triggerDag(baseConfig, dagId as string, req.body);
             return res.status(200).json(dags);
         }
         else {

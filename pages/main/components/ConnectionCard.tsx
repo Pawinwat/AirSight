@@ -9,6 +9,7 @@ import { InstanceStatus } from 'src/types/airflow';
 import { ConnectionCardData } from '../../../types/main-page';
 import StatusChip from './StatusChip';
 import PipelineEye from 'src/components/connection/PipelineEye';
+import { roundToNearestMinutes } from 'date-fns';
 interface ConnectionCardProps {
     data: ConnectionCardData;
     isVertical: boolean;
@@ -20,7 +21,7 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
         limit: 1,
         order_by: '-execution_date',
     };
-
+    // console.log(roundToNearestMinutes(new Date(),{nearestTo:5}))
     // const dagRuns = useDagRuns(
     //     { params: runParams },
     //     data?.connection_id as string,

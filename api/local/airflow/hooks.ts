@@ -1,13 +1,31 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosRequestConfig } from "axios";
-import { getDagRuns, getTaskInstanceLogs, getTaskInstances, getTaskInstanceTries, triggerDag } from ".";
-import { AirflowDagRunsResponse, AirflowTaskInstanceResponse } from "src/types/airflow";
+import { getDagRuns, getDags, getTaskInstanceLogs, getTaskInstances, getTaskInstanceTries, triggerDag } from ".";
+import { AirflowDagRunsResponse, AirflowDagsResponse, AirflowTaskInstanceResponse } from "src/types/airflow";
 const currentTime = new Date().toISOString();
+
+
+export const useDags = (config: AxiosRequestConfig, connectionId: string | null, dagId: string | null) => {
+    return useQuery<AirflowDagsResponse>({
+        queryKey: ['useDags', connectionId, dagId, config],
+        queryFn: () => getDags(config, connectionId as string, dagId as string),
+        enabled: !!dagId && !!connectionId,
+        placeholderData: {
+            dags: [],
+            total_entries: 0
+        }
+    });
+};
+
 export const useDagRuns = (config: AxiosRequestConfig, connectionId: string | null, dagId: string | null) => {
     return useQuery<AirflowDagRunsResponse>({
         queryKey: ['dagRuns', connectionId, dagId, config],
         queryFn: () => getDagRuns(config, connectionId as string, dagId as string),
-        enabled: !!dagId && !!connectionId
+        enabled: !!dagId && !!connectionId,
+        placeholderData: {
+            dag_runs: [],
+            total_entries: 0
+        }
     });
 };
 
@@ -23,7 +41,7 @@ export const useTaskInstanceLogs = (config: AxiosRequestConfig, connectionId: st
     return useQuery<string>({
         queryKey: ['useTaskInstanceLogs', connectionId, dagId, config, dagRunId, taskId, taskTryNumber],
         queryFn: () => getTaskInstanceLogs(config, connectionId, dagId, dagRunId, taskId, taskTryNumber),
-        enabled:!!connectionId && !!dagId && !!dagRunId
+        enabled: !!connectionId && !!dagId && !!dagRunId
     });
 };
 

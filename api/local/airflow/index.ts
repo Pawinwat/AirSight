@@ -1,6 +1,35 @@
 import { AxiosRequestConfig } from "axios";
 import { localAxios } from "src/api";
 
+
+
+/**
+ * Get the list of DAG runs for a specific DAG.
+ * @param config - Axios request configuration including baseURL and headers.
+ * @param connectionId - The ID of the connection.
+ * @param dagId - The ID of the DAG.
+ * @returns List of DAG runs.
+ */
+export const getDags = async (
+    config: AxiosRequestConfig,
+    connectionId: string,
+    dagId: string
+) => {
+    const { data } = await localAxios.get(`/api/v1/connections/${connectionId}/dags/${dagId}`, config);
+    return data;
+};
+
+
+export const getDagSource = async (
+    config: AxiosRequestConfig,
+    connectionId: string,
+    dagId: string,
+    fileToken: string
+) => {
+    const { data } = await localAxios.get(`/api/v1/connections/${connectionId}/dags/${dagId}/dagSources/${fileToken}`, config);
+    return data;
+};
+
 /**
  * Get the list of DAG runs for a specific DAG.
  * @param config - Axios request configuration including baseURL and headers.
@@ -13,7 +42,7 @@ export const getDagRuns = async (
     connectionId: string,
     dagId: string
 ) => {
-    const { data } = await localAxios.get(`/api/v1/dags/${connectionId}/${dagId}/dagRuns`, config);
+    const { data } = await localAxios.get(`/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns`, config);
     return data;
 };
 
@@ -31,7 +60,7 @@ export const getDagRunsBatch = async (
     payload: Record<string, any>
 
 ) => {
-    const { data } = await localAxios.post(`/api/v1/dags/${connectionId}/${dagId}/dagRuns`, payload,config);
+    const { data } = await localAxios.post(`/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns`, payload, config);
     return data;
 };
 
@@ -50,7 +79,7 @@ export const getDagRunDetails = async (
     runId: string
 ) => {
     const { data } = await localAxios.get(
-        `/api/v1/dags/${connectionId}/${dagId}/dagRuns/${runId}`,
+        `/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns/${runId}`,
         config
     );
     return data;
@@ -71,7 +100,7 @@ export const getTaskInstances = async (
     runId: string
 ) => {
     const { data } = await localAxios.get(
-        `/api/v1/dags/${connectionId}/${dagId}/dagRuns/${runId}/taskInstances`,
+        `/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns/${runId}/taskInstances`,
         config
     );
     return data;
@@ -96,7 +125,7 @@ export const getTaskInstanceLogs = async (
     taskTryNumber: string
 ) => {
     const { data } = await localAxios.get(
-        `/api/v1/dags/${connectionId}/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/logs/${taskTryNumber}`,
+        `/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/logs/${taskTryNumber}`,
         config
     );
     return data;
@@ -117,7 +146,7 @@ export const clearTaskInstances = async (
     payload: Record<string, any>
 ) => {
     const { data } = await localAxios.post(
-        `/api/v1/dags/${connectionId}/${dagId}/clearTaskInstances`,
+        `/api/v1/connections/${connectionId}/dags/${dagId}/clearTaskInstances`,
         payload,
         config
     );
@@ -180,7 +209,7 @@ export const getTaskInstanceTries = async (
     taskId: string
 ) => {
     const { data } = await localAxios.get(
-        `/api/v1/dags/${connectionId}/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/tries`,
+        `/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/tries`,
         config
     );
     return data;
@@ -201,12 +230,11 @@ export const triggerDag = async (
     connectionId: string,
     dagId: string,
     payload: Record<string, any>
-  ) => {
+) => {
     const { data } = await localAxios.post(
-      `/api/v1/dags/${connectionId}/${dagId}/dagRuns`,
-      payload,
-      config
+        `/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns`,
+        payload,
+        config
     );
     return data;
-  };
-  
+};

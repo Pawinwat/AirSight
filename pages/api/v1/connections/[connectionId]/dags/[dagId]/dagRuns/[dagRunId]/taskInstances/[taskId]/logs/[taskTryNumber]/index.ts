@@ -4,7 +4,7 @@ import { getTaskInstanceLogs } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
 import { getBaseRequestConfig } from 'src/utils/request';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function taskInstancesLogsHandler(req: NextApiRequest, res: NextApiResponse) {
     try {
         const { dagId, connectionId, dagRunId, taskId, taskTryNumber  } = req.query;
         // Validate connectionId
