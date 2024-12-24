@@ -20,7 +20,7 @@ import { useRouter } from 'next/router';
 import { Card } from 'primereact/card';
 import { MenuItem } from 'primereact/menuitem';
 import { Tag } from 'primereact/tag';
-import { useDagDetails, useDagSources } from 'src/api/local/airflow/hooks';
+import { useDagDetails, useDagRuns24Hours, useDagSources } from 'src/api/local/airflow/hooks';
 import Breadcrumbs from 'src/components/breadcrumb/Breadcrumbs';
 import DagRunEye from 'src/components/dag/DagRunEye';
 import DagRunList from 'src/components/dag/DagRunList';
@@ -48,7 +48,7 @@ interface SingleDagPageServerProps {
 
 
 const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
-    const { connection, dagRuns } = useDagRunsContext()
+    const { connection } = useDagRunsContext()
     const router = useRouter();
     const { query } = router;
     const dagId = query.dagId
@@ -63,17 +63,17 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
     )
     const limit = parseInt((query.limit as string) || '25', 25);
     const offset = parseInt((query.offset as string) || '0', 0);
-    // const runParams = {
-    //     offset,
-    //     limit,
-    //     order_by: '-execution_date',
-    // };
-    // const dagRuns = useDagRuns({
-    //     params: runParams
-    // },
-    //     connectionId as string,
-    //     dagId as string
-    // )
+    const runParams = {
+        offset,
+        limit,
+        order_by: '-execution_date',
+    };
+    const dagRuns = useDagRuns24Hours({
+        params: runParams
+    },
+        connectionId as string,
+        dagId as string
+    )
 
     // const dags = useDag
     // const tasks = useTaskInstances(

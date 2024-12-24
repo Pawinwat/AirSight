@@ -24,7 +24,7 @@ import { PATH } from 'src/routes';
 import { AirflowDagsResponse, Dag } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import { getBaseRequestConfig } from 'src/utils/request';
-import ConnectionSelector from './components/ConnectionSelector';
+import ConnectionSelector from '../../components/ConnectionSelector';
 
 interface DagsServerProps {
   connection: ConnectionData

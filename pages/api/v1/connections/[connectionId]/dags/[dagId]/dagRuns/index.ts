@@ -6,7 +6,23 @@ import { getBaseRequestConfig } from 'src/utils/request';
 
 export default async function dagRunsHandler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        const { dagId, connectionId, limit = '10', offset = '0', tags, order_by } = req.query;
+        const {
+            dagId,
+            connectionId,
+            limit = '10',
+            offset = '0',
+            tags,
+            order_by,
+            execution_date_gte,
+            execution_date_lte,
+            start_date_gte,
+            start_date_lte,
+            end_date_gte,
+            end_date_lte,
+            updated_at_gte,
+            updated_at_lte,
+            state
+        } = req.query;
 
         // Validate connectionId
         if (!connectionId || typeof connectionId !== 'string') {
@@ -24,6 +40,16 @@ export default async function dagRunsHandler(req: NextApiRequest, res: NextApiRe
                 offset: parsedOffset,
                 tags,
                 order_by,
+                execution_date_gte,
+                execution_date_lte,
+                start_date_gte,
+                start_date_lte,
+                end_date_gte,
+                end_date_lte,
+                updated_at_gte,
+                updated_at_lte,
+                state
+
             },
         };
 

@@ -1,5 +1,7 @@
 import { AxiosRequestConfig } from "axios";
+import { formatISO, subHours } from "date-fns";
 import { localAxios } from "src/api";
+import { AirflowDagRunsResponse, DagRun } from "src/types/airflow";
 
 
 
@@ -56,6 +58,78 @@ export const getDagRuns = async (
     const { data } = await localAxios.get(`/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns`, config);
     return data;
 };
+
+/**
+ * Get the list of DAG runs for a specific DAG within the last 24 hours.
+ * @param config - Axios request configuration including baseURL and headers.
+ * @param connectionId - The ID of the connection.
+ * @param dagId - The ID of the DAG.
+ * @returns List of DAG runs.
+ */
+export const getDagRuns24Hours = async (
+    config: AxiosRequestConfig,
+    connectionId: string,
+    dagId: string
+  ): Promise<AirflowDagRunsResponse> => {
+    try {
+      const now = new Date();
+      const startTime = subHours(now, 24);
+      const startDateISO = formatISO(startTime);
+  
+      const allDagRuns: DagRun[] = [];
+      let offset = 0;
+      const limit = 100; // API limit per request
+  
+      // Fetch the first batch to determine total entries
+      const { data: initialData } = await localAxios.get(
+        `/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns`,
+        {
+          ...config,
+          params: {
+            start_date_gte: startDateISO,
+            limit,
+            offset,
+          },
+        }
+      );
+  
+      const totalEntries = initialData.total_entries || 0;
+      allDagRuns.push(...initialData.dag_runs);
+  
+      // Calculate total API calls needed based on total entries
+      const totalCalls = Math.ceil(totalEntries / limit);
+  
+      for (let i = 1; i < totalCalls; i++) {
+        offset = i * limit;
+  
+        const { data } = await localAxios.get(
+          `/api/v1/connections/${connectionId}/dags/${dagId}/dagRuns`,
+          {
+            ...config,
+            params: {
+              start_date_gte: startDateISO,
+              limit,
+              offset,
+            },
+          }
+        );
+  
+        allDagRuns.push(...data.dag_runs);
+      }
+  
+      return {
+        dag_runs:allDagRuns,
+        total_entries:totalEntries
+      };
+    } catch (error) {
+      console.error(`Error fetching DAG runs for DAG ${dagId}:`, error);
+      return {
+        dag_runs:[],
+        total_entries:0
+      }
+    //   throw error;
+    }
+  };
 
 /**
  * Get the list of DAG runs for a specific DAG.

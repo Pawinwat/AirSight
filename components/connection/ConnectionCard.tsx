@@ -2,10 +2,11 @@ import { motion } from 'framer-motion';
 import router from 'next/router';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
-import PipelineEye from 'src/components/connection/PipelineEye';
+import { useDagRuns24Hours } from 'src/api/local/airflow/hooks';
 import { PATH } from 'src/routes';
 import { InstanceStatus } from 'src/types/airflow';
-import { ConnectionCardData } from '../../../types/main-page';
+import { ConnectionCardData } from '../../types/main-page';
+import DagRunEye from '../dag/DagRunEye';
 import StatusChip from './StatusChip';
 interface ConnectionCardProps {
     data: ConnectionCardData;
@@ -13,17 +14,17 @@ interface ConnectionCardProps {
 }
 
 function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
-    // const runParams = {
-    //     offset: 0,
-    //     limit: 1,
-    //     order_by: '-execution_date',
-    // };
+    const runParams = {
+        offset: 0,
+        limit: 100,
+        order_by: '-execution_date',
+    };
     // console.log(roundToNearestMinutes(new Date(),{nearestTo:5}))
-    // const dagRuns = useDagRuns(
-    //     { params: runParams },
-    //     data?.connection_id as string,
-    //     `~`
-    // );
+    const dagRuns = useDagRuns24Hours(
+        { params: runParams },
+        data?.connection_id as string,
+        `~`
+    );
 
     const openInNewTab = (url?: string | null) => {
         if (!url) return;
@@ -143,7 +144,7 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                     />
                 </div> */}
                     {
-                        isVertical && <PipelineEye />
+                        isVertical && <DagRunEye data={dagRuns?.data?.dag_runs || []} />
                     }
                     {!isVertical && (
                         <div className="button-container">

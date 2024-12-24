@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosRequestConfig } from "axios";
 import { AirflowDagRunsResponse, AirflowDagsResponse, AirflowTaskInstanceResponse, Dag } from "src/types/airflow";
-import { getDagDetails, getDagRuns, getDags, getDagSource, getTaskInstanceLogs, getTaskInstances, getTaskInstanceTries, triggerDag } from ".";
+import { getDagDetails, getDagRuns, getDagRuns24Hours, getDags, getDagSource, getTaskInstanceLogs, getTaskInstances, getTaskInstanceTries, triggerDag } from ".";
 const currentTime = new Date().toISOString();
 
 
@@ -41,6 +41,18 @@ export const useDagRuns = (config: AxiosRequestConfig, connectionId: string | nu
     return useQuery<AirflowDagRunsResponse>({
         queryKey: ['dagRuns', connectionId, dagId, config],
         queryFn: () => getDagRuns(config, connectionId as string, dagId as string),
+        enabled: !!dagId && !!connectionId,
+        placeholderData: {
+            dag_runs: [],
+            total_entries: 0
+        }
+    });
+};
+
+export const useDagRuns24Hours = (config: AxiosRequestConfig, connectionId: string | null, dagId: string | null) => {
+    return useQuery<AirflowDagRunsResponse>({
+        queryKey: ['useDagRuns24Hours', connectionId, dagId, config],
+        queryFn: () => getDagRuns24Hours(config, connectionId as string, dagId as string),
         enabled: !!dagId && !!connectionId,
         placeholderData: {
             dag_runs: [],
