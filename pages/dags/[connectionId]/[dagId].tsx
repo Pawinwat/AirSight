@@ -1,12 +1,8 @@
-import { GetServerSideProps } from 'next';
 import { Chart } from 'primereact/chart';
 import { InputTextarea } from 'primereact/inputtextarea';
 import React from 'react';
-import { getDagDetails, getDagSource } from 'src/api/airflow';
-import prisma from 'src/lib/prisma';
 import { Dag, DagRun, TaskInstance } from 'src/types/airflow';
 
-import { AxiosRequestConfig } from 'axios';
 import {
     CategoryScale,
     Chart as ChartJS, // For time-based x-axis
@@ -24,7 +20,7 @@ import { useRouter } from 'next/router';
 import { Card } from 'primereact/card';
 import { MenuItem } from 'primereact/menuitem';
 import { Tag } from 'primereact/tag';
-import { useDagRuns } from 'src/api/local/airflow/hooks';
+import { useDagDetails, useDagRuns, useDagSources } from 'src/api/local/airflow/hooks';
 import Breadcrumbs from 'src/components/breadcrumb/Breadcrumbs';
 import PipelineEye from 'src/components/connection/PipelineEye';
 import DagRunList from 'src/components/dag/DagRunList';
@@ -36,7 +32,6 @@ import { getStatusColor } from 'src/constant/colors';
 import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { PATH } from 'src/routes';
 import { ConnectionData } from 'src/types/db';
-import { getBaseRequestConfig } from 'src/utils/request';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale);
 
@@ -50,48 +45,22 @@ interface SingleDagPageServerProps {
     connection: ConnectionData;
     tasks: TaskInstance[]
 }
-type DagIdPageParams = { connectionId: string; dagId: string; runId: string };
-
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-    const { connectionId, dagId } = params as DagIdPageParams
 
 
-    const connections = await prisma.connection.findMany({
-        where: { is_active: true },
-    });
-
-    const connection = connections?.find((rec) => rec.connection_id === connectionId);
-    if (!connection || !connection.api_url || !connection.header) {
-        return { notFound: true };
-    }
-    const baseConfig = getBaseRequestConfig(connection)
-
-    const dagDetailsConfig: AxiosRequestConfig = {
-        ...baseConfig
-    };
-
-    const [ dag] = await Promise.all([
-        getDagDetails(dagDetailsConfig, dagId),
-        
-    ]);
-
-    const dagSource: string = await getDagSource(dagDetailsConfig, dag.file_token);
-    return {
-        props: {
-            connection,
-            dag,
-            dagSource
-            
-        },
-    };
-};
-
-const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag,  dagSource }) => {
+const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
     const { connection } = useDagRunsContext()
     const router = useRouter();
     const { query } = router;
-    const dagId = query.dagId || `~`
+    const dagId = query.dagId
     const connectionId = query.connectionId as string
+    const dag = useDagDetails({ params: {} }, connectionId, dagId as string)
+    const dagData = dag?.data as Dag
+    const dagSource = useDagSources(
+        { params: {} },
+        connectionId,
+        dagId as string,
+        dag?.data?.file_token as string
+    )
     const limit = parseInt((query.limit as string) || '25', 25);
     const offset = parseInt((query.offset as string) || '0', 0);
     const runParams = {
@@ -105,6 +74,7 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag,  dagSource }) 
         connectionId as string,
         dagId as string
     )
+
     // const dags = useDag
     // const tasks = useTaskInstances(
     //     {params:{}},
@@ -180,9 +150,9 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag,  dagSource }) 
 
         },
         {
-            label: dag.dag_id as string,
-            id: dag.dag_id,
-            template: () => <Link href={PATH.mainDagId(connection?.connection_id as string, dag.dag_id)}>{dag.dag_id}</Link>
+            label: dag?.data?.dag_id as string,
+            id: dagData?.dag_id,
+            template: () => <Link href={PATH.mainDagId(connection?.connection_id as string, dagData?.dag_id)}>{dagData?.dag_id}</Link>
         }
 
     ];
@@ -202,8 +172,8 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag,  dagSource }) 
                     // justifyContent:'space-between'
                 }}
             >
-                <h1 className="p-text-center">DAG Details: {dag.dag_id}</h1>
-                <RunDagButton dagId={dag.dag_id} />
+                <h1 className="p-text-center">DAG Details: {dagData?.dag_id}</h1>
+                <RunDagButton dagId={dagData?.dag_id} />
             </div>
 
             <div
@@ -227,19 +197,19 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag,  dagSource }) 
 
                             <div className="p-card-body">
                                 <p>
-                                    <strong>Owner:</strong> {dag.owners}
+                                    <strong>Owner:</strong> {dagData?.owners}
                                 </p>
                                 <p>
-                                    <strong>Description:</strong> {dag.description || 'N/A'}
+                                    <strong>Description:</strong> {dagData?.description || 'N/A'}
                                 </p>
                                 <p>
-                                    <strong>Schedule:</strong> {dag.schedule_interval?.value || 'N/A'}
+                                    <strong>Schedule:</strong> {dagData?.schedule_interval?.value || 'N/A'}
                                 </p>
                                 <p>
-                                    <strong>Schedule Description:</strong> {dag.timetable_description || 'N/A'}
+                                    <strong>Schedule Description:</strong> {dagData?.timetable_description || 'N/A'}
                                 </p>
                                 {
-                                    dag.tags?.map((t, index) => (
+                                    dagData?.tags?.map((t, index) => (
                                         <Tag
                                             key={index}
                                             value={t.name}
@@ -271,7 +241,7 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag,  dagSource }) 
                     style={{ flexGrow: 'unset', width: '50%' }}
                     // autoResize 
                     // cols={90}
-                    value={dagSource}
+                    value={dagSource?.data as string}
                 />
             </div>
             <div

@@ -54,6 +54,8 @@ export interface AirflowDagsResponse {
   total_entries: number;
 }
 
+
+
 export interface AirflowDagRunsResponse {
   dag_runs: DagRun[];
   total_entries: number;

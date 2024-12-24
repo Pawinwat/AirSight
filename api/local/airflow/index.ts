@@ -20,6 +20,17 @@ export const getDags = async (
 };
 
 
+/**
+ * Get the details of a specific DAG.
+ * @param config - Axios request configuration including baseURL, headers.
+ * @param dagId - The ID of the DAG.
+ * @returns DAG details.
+ */
+export const getDagDetails = async (config: AxiosRequestConfig, connectionId: string, dagId: string) => {
+    const { data } = await localAxios.get(`/api/v1/connections/${connectionId}/dags/${dagId}`, config);
+    return data;
+};
+
 export const getDagSource = async (
     config: AxiosRequestConfig,
     connectionId: string,
