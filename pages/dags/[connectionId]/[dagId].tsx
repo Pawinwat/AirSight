@@ -32,6 +32,7 @@ import { getStatusColor } from 'src/constant/colors';
 import { PATH } from 'src/routes';
 import { ConnectionData } from 'src/types/db';
 import { getBaseRequestConfig } from 'src/utils/request';
+import RunDagButton from 'src/components/dag/RunDagButton';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale);
 
@@ -171,7 +172,20 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
     return (
         <PageFrame>
             <Breadcrumbs model={items} />
-            <h1 className="p-text-center">DAG Details: {dag.dag_id}</h1>
+            <div
+                            title='Run Now'
+            style={{
+                display:'flex',
+                flexDirection:'row',
+                alignItems:'center',
+                gap:'20px',
+                // justifyContent:'space-between'
+            }}
+            >
+<h1 className="p-text-center">DAG Details: {dag.dag_id}</h1>
+<RunDagButton dagId={dag.dag_id}/>
+            </div>
+
             <div
                 style={{ display: 'flex', flexDirection: 'row', width: '100%', gap: CARD_GAP }}
             >
@@ -181,7 +195,7 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = ({ dag, dag_runs, dagS
                 >
                     <Card
                         title='DAG Metadata'
-
+                        
                     >
                         <div className="p-card-body">
                             <p>

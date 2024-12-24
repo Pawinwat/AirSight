@@ -18,6 +18,24 @@ export const getDagRuns = async (
 };
 
 /**
+ * Get the list of DAG runs for a specific DAG.
+ * @param config - Axios request configuration including baseURL and headers.
+ * @param connectionId - The ID of the connection.
+ * @param dagId - The ID of the DAG.
+ * @returns List of DAG runs.
+ */
+export const getDagRunsBatch = async (
+    config: AxiosRequestConfig,
+    connectionId: string,
+    dagId: string,
+    payload: Record<string, any>
+
+) => {
+    const { data } = await localAxios.post(`/api/v1/dags/${connectionId}/${dagId}/dagRuns`, payload,config);
+    return data;
+};
+
+/**
  * Get details of a specific DAG run.
  * @param config - Axios request configuration including baseURL and headers.
  * @param connectionId - The ID of the connection.

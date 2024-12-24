@@ -183,7 +183,7 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
           <Skeleton width="100%" style={{ margin: '0.5rem' }} />
         ) : (
           <>
-            <i className={`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: rowData?.is_paused ? 'gray' : 'var(--primary-color)' }}></i>
+            <i className={rowData?.is_paused?`pi pi-pause-circle`:`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: rowData?.is_paused ? 'gray' : 'var(--primary-color)' }}></i>
             {/* <span
               onClick={() => handleViewDag(rowData.dag_id)}
             > */}

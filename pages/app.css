@@ -117,13 +117,16 @@ body {
 
 .p-card-hover .button-container {
     /* aspect-ratio: 1/1; */
-    visibility: hidden;
-    /* transition: all 0.3s ease; */
+    visibility: visible;
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
 }
 
 .p-card-hover:hover .button-container {
     visibility: visible;
     opacity: 1;
+    transition: all 0.3s ease-in-out;
+
     /* Fade in buttons on hover */
 }
 

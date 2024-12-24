@@ -55,6 +55,12 @@ function TaskLog({ taskInstance }: TaskLogProps) {
                         style={{
                             width: '20px',
                             height: '20px',
+                            transform: ((tryNum + 1) == selectedTryNum)
+                                ? 'translateY(var(--translate-y)) translateX(var(--translate-x))'
+                                : 'none',
+                            boxShadow: ((tryNum + 1) == selectedTryNum)
+                                ? 'var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-color)'
+                                : 'none',
                             backgroundColor: ((tryNum + 1) == taskInstance.try_number) ? getStatusColor(taskInstance?.state as DagState) : getStatusColor('failed')
                         }}
                         onClick={(e) => {
@@ -66,7 +72,7 @@ function TaskLog({ taskInstance }: TaskLogProps) {
                         {tryNum + 1}
                     </Button>)
                 }
-                <Button
+                {!taskInstance?.end_date && <Button
                     icon={log?.isFetching ? 'pi pi-spin pi-refresh' : 'pi pi-refresh'}
                     // size='small'
                     style={{
@@ -77,7 +83,7 @@ function TaskLog({ taskInstance }: TaskLogProps) {
                         log.refetch()
                         e.stopPropagation()
                     }}
-                />
+                />}
             </div>
             <InputTextarea
                 style={{
