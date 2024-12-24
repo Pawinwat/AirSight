@@ -32,7 +32,7 @@ export const useDagSources = (config: AxiosRequestConfig, connectionId: string |
     return useQuery<string>({
         queryKey: ['useDagSources', connectionId, dagId, config, fileToken],
         queryFn: () => getDagSource(config, connectionId as string, dagId as string, fileToken),
-        enabled: !!dagId && !!connectionId,
+        enabled: !!dagId && !!connectionId &&  !!fileToken,
         placeholderData: ""
     });
 };

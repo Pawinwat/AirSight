@@ -20,9 +20,9 @@ import { useRouter } from 'next/router';
 import { Card } from 'primereact/card';
 import { MenuItem } from 'primereact/menuitem';
 import { Tag } from 'primereact/tag';
-import { useDagDetails, useDagRuns, useDagSources } from 'src/api/local/airflow/hooks';
+import { useDagDetails, useDagSources } from 'src/api/local/airflow/hooks';
 import Breadcrumbs from 'src/components/breadcrumb/Breadcrumbs';
-import PipelineEye from 'src/components/connection/PipelineEye';
+import DagRunEye from 'src/components/dag/DagRunEye';
 import DagRunList from 'src/components/dag/DagRunList';
 import RunDagButton from 'src/components/dag/RunDagButton';
 import { CARD_GAP } from 'src/components/layout/constants';
@@ -48,7 +48,7 @@ interface SingleDagPageServerProps {
 
 
 const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
-    const { connection } = useDagRunsContext()
+    const { connection, dagRuns } = useDagRunsContext()
     const router = useRouter();
     const { query } = router;
     const dagId = query.dagId
@@ -63,17 +63,17 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
     )
     const limit = parseInt((query.limit as string) || '25', 25);
     const offset = parseInt((query.offset as string) || '0', 0);
-    const runParams = {
-        offset,
-        limit,
-        order_by: '-execution_date',
-    };
-    const dagRuns = useDagRuns({
-        params: runParams
-    },
-        connectionId as string,
-        dagId as string
-    )
+    // const runParams = {
+    //     offset,
+    //     limit,
+    //     order_by: '-execution_date',
+    // };
+    // const dagRuns = useDagRuns({
+    //     params: runParams
+    // },
+    //     connectionId as string,
+    //     dagId as string
+    // )
 
     // const dags = useDag
     // const tasks = useTaskInstances(
@@ -221,10 +221,11 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
                                     ))}
 
                             </div>
-                            <PipelineEye
+                            <DagRunEye
                                 style={{
                                     height: '180px', width: '250px'
                                 }}
+                                data={dagRuns?.data?.dag_runs || []}
                             />
                         </div>
 

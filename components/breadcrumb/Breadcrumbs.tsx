@@ -31,7 +31,7 @@ function Breadcrumbs({ model }: BreadcrumbsProps) {
             />
 
             {model?.map((item, index) => (
-                <React.Fragment key={item.id}>
+                <React.Fragment key={`b-${item.id}-${index}`}>
                     {/* Separator */}
                     <i className="pi pi-chevron-right" style={{ fontSize: '1.5rem' }}></i>
 
