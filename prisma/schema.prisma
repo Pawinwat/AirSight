@@ -8,10 +8,11 @@ datasource db {
 }
 
 model connection {
-  connection_id String   @id(map: "newtable_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String?  @db.VarChar
-  api_url       String?  @db.VarChar
-  header        Json?
-  is_active     Boolean? @default(true)
-  ui_url        String?  @db.VarChar
+  connection_id    String   @id(map: "newtable_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String?  @db.VarChar
+  api_url          String?  @db.VarChar
+  header           Json?
+  is_active        Boolean? @default(true)
+  ui_url           String?  @db.VarChar
+  refresh_interval String?  @default(dbgenerated("60")) @db.VarChar
 }
