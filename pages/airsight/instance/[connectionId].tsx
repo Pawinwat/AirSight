@@ -25,7 +25,7 @@ import prisma from 'src/lib/prisma';
 import { PATH } from 'src/routes';
 import { AirflowDagsResponse, Dag } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
-import ConnectionSelector from '../../components/ConnectionSelector';
+import ConnectionSelector from '../../../components/ConnectionSelector';
 
 interface DagsServerProps {
   connection: ConnectionData

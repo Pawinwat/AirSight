@@ -1,6 +1,8 @@
+const prefix = 'airsight'
+const createPath = (path: string) => `/${prefix}${path}`
 export const PATH = {
-    main:'/main',
-    connectionId:(connectionId:string)=>`/instance/${connectionId}`,
-    mainDagId:(connectionId:string,dagId:string)=>`/instance/${connectionId}/${dagId}`,
-    config:(connectionId:string)=>`/config${!!connectionId ? `/${connectionId}` : ''}`
+    main: createPath('/main'),
+    connectionId: (connectionId: string) => createPath(`/instance/${connectionId}`),
+    mainDagId: (connectionId: string, dagId: string) => createPath(`/instance/${connectionId}/${dagId}`),
+    config: (connectionId: string) => createPath(`/config${!!connectionId ? `/${connectionId}` : ''}`)
 }

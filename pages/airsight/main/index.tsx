@@ -5,8 +5,8 @@ import { Card } from 'primereact/card';
 import React, { useState } from 'react'; // Import useState
 import { getInstanceStatus, getVersion } from 'src/api/airflow';
 import prisma from 'src/lib/prisma';
-import ConnectionCard from '../../components/connection/ConnectionCard';
-import { MainPageProps } from '../../types/main-page';
+import ConnectionCard from '../../../components/connection/ConnectionCard';
+import { MainPageProps } from '../../../types/main-page';
 import { PATH } from 'src/routes';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
