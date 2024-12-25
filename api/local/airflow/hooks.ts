@@ -5,11 +5,11 @@ import { getDagDetails, getDagRuns, getDagRuns24Hours, getDags, getDagSource, ge
 const currentTime = new Date().toISOString();
 
 
-export const useDags = (config: AxiosRequestConfig, connectionId: string | null, dagId: string | null) => {
+export const useDags = (config: AxiosRequestConfig, connectionId: string | null) => {
     return useQuery<AirflowDagsResponse>({
-        queryKey: ['useDags', connectionId, dagId, config],
-        queryFn: () => getDags(config, connectionId as string, dagId as string),
-        enabled: !!dagId && !!connectionId,
+        queryKey: ['useDags', connectionId, config],
+        queryFn: () => getDags(config, connectionId as string),
+        enabled:  !!connectionId,
         placeholderData: {
             dags: [],
             total_entries: 0

@@ -12,18 +12,19 @@ import { InputText } from 'primereact/inputtext';
 import { Skeleton } from 'primereact/skeleton';
 import { Tag } from 'primereact/tag';
 import { JSX, ReactNode, useEffect, useState } from 'react';
-import { getDags } from 'src/api/airflow';
+import { useDags } from 'src/api/local/airflow/hooks';
+import DagRunEye from 'src/components/dag/DagRunEye';
 import DagRunList from 'src/components/dag/DagRunList';
 import RunDagButton from 'src/components/dag/RunDagButton';
 import { CARD_GAP } from 'src/components/layout/constants';
 import PageFrame from 'src/components/layout/PageFrame';
 import TaskInstanceView from 'src/components/task/TaskInstanceView';
+import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { useDebounceEffect } from 'src/hooks/useDebounceEffect';
 import prisma from 'src/lib/prisma';
 import { PATH } from 'src/routes';
 import { AirflowDagsResponse, Dag } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
-import { getBaseRequestConfig } from 'src/utils/request';
 import ConnectionSelector from '../../components/ConnectionSelector';
 
 interface DagsServerProps {
@@ -33,15 +34,9 @@ interface DagsServerProps {
   // dag_runs: AirflowDagRunsResponse
   runConfig: AxiosRequestConfig
 }
-export const getServerSideProps: GetServerSideProps = async ({ params, query }) => {
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   const { connectionId } = params as { connectionId: string };
-  const limit = parseInt((query.limit as string) || '10', 10); // Default 10 items per page
-  const offset = parseInt((query.offset as string) || '0', 10); // Default 0 offset
-  const {
-    tags,
-    search,
-    // only_active
-  } = query;
+
   const connections = await prisma.connection.findMany({
     where: {
       is_active: true,
@@ -51,45 +46,51 @@ export const getServerSideProps: GetServerSideProps = async ({ params, query }) 
   if (!connection || !connection.api_url || !connection.header) {
     return { notFound: true };
   }
-  const baseConfig = getBaseRequestConfig(connection)
-  const config: AxiosRequestConfig = {
-    params: {
-      limit,
-      offset,
-      tags: tags || null,
-      // only_active: (only_active == 'true') ? 'true' : null,
-      dag_id_pattern: search || null
-    },
-    ...baseConfig
-  };
-  const [
-    data
-  ] = await Promise.all([
-    getDags(config),
-  ])
+
+
   return {
     props: {
-      connection,
       connections,
-      dags: data,
 
     },
   };
 };
 
-export default function DagsPage({ connection, dags, connections }: DagsServerProps) {
+export default function DagsPage({ connections }: DagsServerProps) {
   const router = useRouter();
   const { query } = router;
-
+  const { connection, dagRuns, taskInstanceData } = useDagRunsContext()
 
   const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
-  const [loading, setLoading] = useState(false);
   // Pagination variables
   const [limit, setLimit] = useState(parseInt((query.limit as string) || '10', 10));
   const offset = parseInt((query.offset as string) || '0', 10);
+  const tags = query?.tags || null
+  const search = query?.search || null
+
+  const dags = useDags(
+    {
+      params: {
+        limit,
+        offset,
+        tags: tags || null,
+        // only_active: (only_active == 'true') ? 'true' : null,
+        dag_id_pattern: search || null
+      }
+    },
+    connection?.connection_id as string,
+  )
+  const [dagsData, setDagsData] = useState<AirflowDagsResponse>()
+  useEffect(() => {
+    if (dags.isFetched) {
+      setDagsData(dags?.data)
+    }
+  }, [dags?.isFetching])
+
+  const isLoading = dags?.isLoading || dags?.isFetching
 
   const rowsPerPageOptions = [5, 10, 25, 50];
-  const totalPages = Math.ceil(dags?.total_entries / limit);
+  const totalPages = Math.ceil((dagsData?.total_entries as number) / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
   const generatePageButtons = () => {
@@ -137,7 +138,6 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
     updateQueryParams(0, newLimit, selectedTags, onlyActive); // Reset to first page when rows per page change
   };
   const updateQueryParams = (newOffset: number, newLimit: number, tags: string[], onlyActive: boolean) => {
-    setLoading(true);
     router.push({
       pathname: router.pathname,
       query: {
@@ -151,9 +151,7 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
     });
   };
 
-  useEffect(() => {
-    setLoading(false); // Stop loading once the component mounts or updates
-  }, [dags]);
+
 
   const [selectedTags, setSelectedTags] = useState<string[]>(
     query.tags ? (query.tags as string).split(',') : []
@@ -179,16 +177,16 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
   const mainBodyTemplate = (rowData: Dag) => {
     return (
       <div className="card flex flex-column gap-2" style={{ gap: 10 }}>
-        {loading ? (
+        {isLoading ? (
           <Skeleton width="100%" style={{ margin: '0.5rem' }} />
         ) : (
           <>
-            <i className={rowData?.is_paused?`pi pi-pause-circle`:`pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: rowData?.is_paused ? 'gray' : 'var(--primary-color)' }}></i>
+            <i className={rowData?.is_paused ? `pi pi-pause-circle` : `pi pi-circle-fill`} style={{ fontSize: '1rem', marginRight: '0.5rem', color: rowData?.is_paused ? 'gray' : 'var(--primary-color)' }}></i>
             {/* <span
               onClick={() => handleViewDag(rowData.dag_id)}
             > */}
             <Link
-              href={PATH.mainDagId(connection.connection_id, rowData.dag_id)}
+              href={PATH.mainDagId(connection?.connection_id as string, rowData.dag_id)}
               style={{ textDecoration: 'none' }}
             >
               {rowData.dag_id}
@@ -201,7 +199,7 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
           </>
         )}
         <div style={{ display: 'flex', gap: 2 }}>
-          {loading
+          {isLoading
             ? Array.from({ length: 3 }).map((_, index) => (
               <div key={`sk-${index}`} style={{ marginTop: 5, marginBottom: '0.2rem', marginRight: '0.5rem' }}>
                 <Skeleton key={index} width="4rem" height="1.5rem" style={{ marginTop: '0.5rem' }} />
@@ -222,10 +220,10 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
   };
 
   const loadingTemplate = (data: Dag, options: ColumnBodyOptions) => {
-    return loading ? <Skeleton width="100%" /> : <div>{data?.[options?.field as keyof Dag] as ReactNode}</div>;
+    return isLoading ? <Skeleton width="100%" /> : <div>{data?.[options?.field as keyof Dag] as ReactNode}</div>;
   };
   const actionTemplate = (data: Dag) => {
-    return <RunDagButton dagId={data?.dag_id} disabled={loading} />
+    return <RunDagButton dagId={data?.dag_id} disabled={isLoading} />
   }
   const [searchTerm, setSearchTerm] = useState(query.search || '');
   useDebounceEffect(() => {
@@ -239,7 +237,7 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
       <div style={{ gap: 5, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <ConnectionSelector connections={connections} />
-          <p>Total DAGs: {dags.total_entries}</p>
+          <p>Total DAGs: {dagsData?.total_entries}</p>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
@@ -293,7 +291,7 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
           </span>
         </div>
 
-        <DataTable size="small" value={dags.dags || []} className="p-datatable-gridlines">
+        <DataTable size="small" value={dagsData?.dags || []} className="p-datatable-gridlines">
           <Column field="dag_id" header="DAG ID" style={{ width: '50%' }} body={mainBodyTemplate} />
           <Column field="description" header="Description" style={{ width: '25%' }} body={loadingTemplate} />
           <Column field="last_parsed_time" header="Last Parsed Time" style={{ width: '25%' }} body={loadingTemplate} />
@@ -307,6 +305,7 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
         </div>
 
       </div>
+
       <div
         style={{
           display: 'flex',
@@ -314,18 +313,19 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
           width: '100%',
           gap: CARD_GAP,
           marginTop: CARD_GAP,
-          maxHeight:'80vh'
+          maxHeight: '80vh'
 
         }}
 
       >
+
         <div
           style={{
             width: '40%'
           }}
         >
           <DagRunList
-            connection={connection}
+            connection={connection as ConnectionData}
           />
 
         </div>
@@ -333,10 +333,18 @@ export default function DagsPage({ connection, dags, connections }: DagsServerPr
           style={{
             width: '60%',
             height: '100%',
-            overflowY:'scroll'
+            overflowY: 'scroll'
           }}
         >
-          <TaskInstanceView />
+          {(taskInstanceData && taskInstanceData?.length > 0) ? <TaskInstanceView /> :
+            <DagRunEye
+              data={dagRuns?.data?.dag_runs || []}
+              style={{
+                width: '100%',
+                height: '80vh'
+              }}
+            />}
+
         </div>
       </div>
     </PageFrame>

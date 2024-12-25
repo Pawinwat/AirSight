@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
-import { useDagRuns, useTaskInstances } from 'src/api/local/airflow/hooks';
+import { useDagRuns, useDagRuns24Hours, useTaskInstances } from 'src/api/local/airflow/hooks';
 import { useConnection } from 'src/api/local/airsight/hooks';
 import { DagRun, TaskInstance } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
@@ -68,7 +68,7 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
         order_by: '-execution_date',
 
     }
-    const dagRuns = useDagRuns({
+    const dagRuns = useDagRuns24Hours({
         params: runParams
     },
         connectionId as string,

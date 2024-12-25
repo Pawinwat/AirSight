@@ -5,6 +5,7 @@ import { AirflowDagRunsResponse, DagRun } from "src/types/airflow";
 
 
 
+
 /**
  * Get the list of DAG runs for a specific DAG.
  * @param config - Axios request configuration including baseURL and headers.
@@ -15,9 +16,8 @@ import { AirflowDagRunsResponse, DagRun } from "src/types/airflow";
 export const getDags = async (
     config: AxiosRequestConfig,
     connectionId: string,
-    dagId: string
 ) => {
-    const { data } = await localAxios.get(`/api/v1/connections/${connectionId}/dags/${dagId}`, config);
+    const { data } = await localAxios.get(`/api/v1/connections/${connectionId}/dags`, config);
     return data;
 };
 

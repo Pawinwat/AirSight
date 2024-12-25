@@ -10,6 +10,7 @@ import { MainPageProps } from '../../types/main-page';
 import { PATH } from 'src/routes';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
+import { cardStyle } from 'src/components/connection/style';
 
 export async function getServerSideProps() {
   // Fetch connections from the database
@@ -54,7 +55,7 @@ export async function getServerSideProps() {
 
 const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
   const router = useRouter(); // Initialize the useRouter hook
-  const [isVertical, setIsVertical] = useState(true); // State to toggle layout direction
+  const [isVertical, setIsVertical] = useState(false); // State to toggle layout direction
 
   const handleAddClick = (connectionId?: string) => {
     const targetUrl = PATH.config(connectionId as string);
@@ -92,20 +93,22 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
       </button> */}
       <div
         style={{
-          // padding: '2rem',
-          // display: 'flex',
-          // flexDirection: 'column',
-          // gap: '1.5rem',
-          alignItems: isVertical ? 'flex-start' : 'center',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center', // Center align wrapped cards
+          alignItems:'center',
+          gap: '1.5rem',
+          // maxWidth: '95vw', // Restrict the container width
         }}
       >
         <motion.div
-          layout // Enable layout animations
+          layout
           style={{
             display: 'flex',
             flexDirection: isVertical ? 'column' : 'row', // Toggle layout direction
             gap: '1.5rem',
-            alignItems: isVertical ? 'center' : 'flex-start',
+            alignItems: 'center', // Align cards consistently
+            flexWrap:'wrap'
           }}
           transition={{
             duration: 0.6,
@@ -118,7 +121,7 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
             {connections.map((item) => (
               <motion.div
                 key={item.connection_id}
-                layout // Enable layout animations for individual items
+                layout
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -30 }}
@@ -133,11 +136,11 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
               </motion.div>
             ))}
 
-            {/* Add New Connection Card with Centered Icon */}
+            {/* Add New Connection Card */}
             <motion.div
-              layout // Enable layout animations
-              initial={{ opacity: 0, y: 30 }} // Start off a little below
-              animate={{ opacity: 1, y: 0 }} // End at its normal position
+              layout
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30 }}
               transition={{
                 duration: 0.6,
@@ -148,20 +151,17 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
             >
               <Card
                 style={{
-                  ...(isVertical ? {
-                    width: '95vw',
-                    // aspectRatio: '1/1',
-                  } : {
-                    width: '200px',
-                    aspectRatio: '1/1',
-                  }),
-
+                  ...(isVertical
+                    ? { width: '95vw' }
+                    : { width: cardStyle.manage.size, aspectRatio: '1/1' }),
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
                   textAlign: 'center',
                   cursor: 'pointer',
                   position: 'relative',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // Add subtle shadow
+                  transition: 'transform 0.2s', // Smooth hover effect
                 }}
                 onClick={() => handleAddClick()}
                 className="p-card-hover"
@@ -170,6 +170,7 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
                   className="pi pi-plus"
                   style={{
                     fontSize: '3rem',
+                    color: '#007ad9', // Optional: Brand color for the icon
                   }}
                 />
               </Card>
@@ -177,6 +178,7 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
           </AnimatePresence>
         </motion.div>
       </div>
+
     </div>
   );
 };

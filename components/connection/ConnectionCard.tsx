@@ -8,6 +8,7 @@ import { InstanceStatus } from 'src/types/airflow';
 import { ConnectionCardData } from '../../types/main-page';
 import DagRunEye from '../dag/DagRunEye';
 import StatusChip from './StatusChip';
+import { cardStyle } from './style';
 interface ConnectionCardProps {
     data: ConnectionCardData;
     isVertical: boolean;
@@ -32,8 +33,8 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
         if (newWindow) newWindow.opener = null;
     };
 
-    const openDashboard = (connectionId?: number | string) => {
-        const targetUrl = `/dags${connectionId ? `/${connectionId}` : ''}`;
+    const openDashboard = (connectionId?: string) => {
+        const targetUrl = PATH.connectionId(connectionId as string)
         router.push(targetUrl);
     };
 
@@ -87,11 +88,48 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
             }}
         >
             <Card
-                // title={data.name}
+                title={<div
+                    style={{ 
+                        display: 'flex',
+                         gap: 5,
+                          flexDirection: 'row',
+                        //   justifyContent:'center',
+                          alignItems:'center'
+                         }}
+                >
+                    <div>
+                        {data.name}
+                    </div>
+                    <div>
+                        {data?.version?.version}
+                    </div>
+                    <div style={{ display: 'flex', gap: 5 }}>
+
+                        {Object.keys(data.status || {})
+                            .filter(
+                                (key) =>
+                                    !!data.status[key as keyof InstanceStatus]?.status
+                            )
+                            .map((key) => {
+                                const status =
+                                    data.status[key as keyof InstanceStatus];
+                                if (!status) return null;
+
+                                return (
+                                    <StatusChip
+                                        key={key}
+                                        name={key}
+                                        status={{ status: status.status }}
+                                    />
+                                );
+                            })}
+                    </div>
+
+                </div>}
                 style={{
                     ...(isVertical
                         ? { width: '95vw', justifyContent: 'space-between', display: 'flex', flexDirection: 'row', alignItems: 'center' }
-                        : { width: '200px', aspectRatio: '1/1' }),
+                        : { width: cardStyle.manage.size, aspectRatio: '1/1' }),
                     position: 'relative',
                     transition: 'transform 0.3s ease',
                     overflow: 'hidden',
@@ -100,52 +138,9 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                 className="p-card-hover"
                 onClick={() => openDashboard(data.connection_id)}
             >
-                <div style={{ display: 'flex', gap: 5, flexDirection: 'row' }}>
-                    <div
-                        style={{ display: 'flex', gap: 5, flexDirection: 'column' }}
-                    >
-                        <>
-                            {data.name}
-                        </>
-                        <div style={{ display: 'flex', gap: 5 }}>
+                <div style={{ display: 'flex', gap: 5, flexDirection: 'row',justifyContent:'center' }}>
+                    <DagRunEye data={dagRuns?.data?.dag_runs || []} />
 
-                            {Object.keys(data.status || {})
-                                .filter(
-                                    (key) =>
-                                        !!data.status[key as keyof InstanceStatus]?.status
-                                )
-                                .map((key) => {
-                                    const status =
-                                        data.status[key as keyof InstanceStatus];
-                                    if (!status) return null;
-
-                                    return (
-                                        <StatusChip
-                                            key={key}
-                                            name={key}
-                                            status={{ status: status.status }}
-                                        />
-                                    );
-                                })}
-                        </div>
-                        <>
-                            {data?.version?.version}
-                        </>
-                    </div>
-
-                    {/* <div style={{}}>
-                    <Chart
-                        type="bar"
-                        data={barChartData}
-                        options={barChartOptions}
-                        style={{
-                            height: '50px'
-                        }}
-                    />
-                </div> */}
-                    {
-                        isVertical && <DagRunEye data={dagRuns?.data?.dag_runs || []} />
-                    }
                     {!isVertical && (
                         <div className="button-container">
                             <Button
