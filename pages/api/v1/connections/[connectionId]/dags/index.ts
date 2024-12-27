@@ -6,7 +6,7 @@ import { getBaseRequestConfig } from 'src/utils/request';
 
 export default async function dagsHandler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        const { connectionId, limit = '10', offset = '0', tags, only_active } = req.query;
+        const { connectionId, limit = '10', offset = '0', tags, only_active, dag_id_pattern } = req.query;
         // Validate connectionId
         if (!connectionId || typeof connectionId !== 'string') {
             return res.status(400).json({ error: 'Invalid or missing connectionId' });
@@ -21,7 +21,8 @@ export default async function dagsHandler(req: NextApiRequest, res: NextApiRespo
                 limit,
                 offset,
                 tags,
-                only_active: (only_active == 'true') ? true : undefined
+                only_active: (only_active == 'true') ? true : undefined,
+                dag_id_pattern
             }
         } as AxiosRequestConfig
         const dags = await getDags(config)

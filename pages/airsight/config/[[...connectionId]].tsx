@@ -85,7 +85,9 @@ const AirflowConnectionForm: React.FC = () => {
     }, [connection?.isFetching]);
 
     useEffect(() => {
-        connection.isSuccess && handleTest()
+        if(connection.isSuccess){
+            handleTest();
+        }
     }, [formik?.dirty, connection?.isFetching])
 
     const isLoading = connection.isFetching || testConnection?.isPending

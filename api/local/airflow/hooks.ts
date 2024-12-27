@@ -57,6 +57,8 @@ export const useDagRuns24Hours = (config: AxiosRequestConfig, connectionId: stri
     }
     const [data, setData] = useState<AirflowDagRunsResponse>(defaultData)
     const [isFetching, setIsFetching] = useState<boolean>(false)
+    // const [isFetched, setIsFetched] = useState<boolean>(false)
+
     // const [runStat, setRunStat] = useState<boolean>(false)
 
     useEffect(() => {
@@ -73,10 +75,13 @@ export const useDagRuns24Hours = (config: AxiosRequestConfig, connectionId: stri
     }
 
     const handleFetch = async () => {
+        // setIsFetched(false)
         setIsFetching(true)
+
         let totalEntries = 0;
        try {
         for await (const batch of fetchDagRunsInBatches(config, connectionId as string, dagId as string)) {
+
             setData((prev) => (
                 {
                     dag_runs: [...prev?.dag_runs, ...batch.dag_runs],
@@ -91,6 +96,7 @@ export const useDagRuns24Hours = (config: AxiosRequestConfig, connectionId: stri
        }
        finally{
         setIsFetching(false)
+        // setIsFetched(true)
        }
     }
 
@@ -99,7 +105,8 @@ export const useDagRuns24Hours = (config: AxiosRequestConfig, connectionId: stri
         data,
         isFetching,
         isLoading:isFetching,
-        refetch
+        refetch,
+        isFetched:!isFetching
     }
 };
 

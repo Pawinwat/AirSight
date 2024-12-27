@@ -53,7 +53,7 @@ export async function getServerSideProps() {
 
 const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
   const router = useRouter(); // Initialize the useRouter hook
-  const [isVertical, _setIsVertical] = useState(false); // State to toggle layout direction
+  const [isVertical] = useState(false); // State to toggle layout direction
 
   const handleAddClick = (connectionId?: string) => {
     const targetUrl = PATH.config(connectionId as string);

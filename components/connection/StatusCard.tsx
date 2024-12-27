@@ -13,7 +13,9 @@ function StatusCard({ data }: StatusCardProps) {
         >
             {
                 Object.keys(data || {})
-                    .map(k => <Card>
+                    .map(k => <Card
+                    key={k}
+                    >
                         <div
                             style={{
                                 display: 'flex',

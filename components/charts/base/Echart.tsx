@@ -30,7 +30,7 @@ const EChartComponent: React.FC<EChartComponentProps> = ({ option, style }) => {
     if (chartInstance.current) {
       chartInstance.current.setOption(option);
     }
-  }, [option]);
+  }, [JSON.stringify(option)]);
 
   return (
     <div

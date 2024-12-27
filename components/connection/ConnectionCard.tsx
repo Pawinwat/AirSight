@@ -10,6 +10,8 @@ import DagRunEye from '../dag/DagRunEye';
 import DagRunStat from '../dag/DagRunStat';
 import StatusChip from './StatusChip';
 import { cardStyle } from './style';
+import { useEffect, useState } from 'react';
+
 interface ConnectionCardProps {
     data: ConnectionCardData;
     isVertical: boolean;
@@ -21,17 +23,17 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
         limit: 100,
         order_by: '-execution_date',
     };
-    // console.log(roundToNearestMinutes(new Date(),{nearestTo:5}))
+
     const dagRuns = useDagRuns24Hours(
         { params: runParams },
         data?.connection_id as string,
         `~`
     );
+
     const runStat = dagRuns?.data?.dag_runs?.reduce((acc, run) => {
         acc[run.state] = (acc[run.state] || 0) + 1; // Increment the count for the state
         return acc;
     }, {} as Record<string, number>);
-
 
     const openInNewTab = (url?: string | null) => {
         if (!url) return;
@@ -40,7 +42,7 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
     };
 
     const openDashboard = (connectionId?: string) => {
-        const targetUrl = PATH.connectionId(connectionId as string)
+        const targetUrl = PATH.connectionId(connectionId as string);
         router.push(targetUrl);
     };
 
@@ -48,6 +50,16 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
         router.push(PATH.config(connectionId));
     };
 
+    const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+    useEffect(() => {
+        if (dagRuns?.isFetched) {
+            setLastUpdate(new Date());
+        }
+    }, [dagRuns?.isFetched]);
+
+    const formatLastUpdate = (date: Date | null) =>
+        date ? date.toLocaleString('en-US', { hour12: true }) : 'N/A';
 
     return (
         <motion.div
@@ -62,46 +74,74 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
             }}
         >
             <Card
-                title={<div
-                    style={{
-                        display: 'flex',
-                        gap: 5,
-                        flexDirection: 'row',
-                        //   justifyContent:'center',
-                        alignItems: 'center'
-                    }}
-                >
-                    <div>
-                        {data.name}
-                    </div>
-                    <div>
-                        {data?.version?.version}
-                    </div>
-                    <div style={{ display: 'flex', gap: 5 }}>
-                        {Object.keys(data.status || {})
-                            .filter(
-                                (key) =>
-                                    !!data.status[key as keyof InstanceStatus]?.status
-                            )
-                            .map((key) => {
-                                const status =
-                                    data.status[key as keyof InstanceStatus];
-                                if (!status) return null;
+                title={
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: 5,
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: 'flex',
+                                gap: 5,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <div>{data.name}</div>
+                            <div>{data?.version?.version}</div>
+                            <div style={{ display: 'flex', gap: 5 }}>
+                                {Object.keys(data.status || {})
+                                    .filter(
+                                        (key) =>
+                                            !!data.status[key as keyof InstanceStatus]?.status
+                                    )
+                                    .map((key) => {
+                                        const status =
+                                            data.status[key as keyof InstanceStatus];
+                                        if (!status) return null;
 
-                                return (
-                                    <StatusChip
-                                        key={key}
-                                        name={key}
-                                        status={{ status: status.status }}
-                                    />
-                                );
-                            })}
+                                        return (
+                                            <StatusChip
+                                                key={key}
+                                                name={key}
+                                                status={{ status: status.status }}
+                                            />
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                        <Button
+                            icon={
+                                dagRuns?.isFetching
+                                    ? 'pi pi-spin pi-refresh'
+                                    : 'pi pi-refresh'
+                            }
+                            onClick={(e) => {
+                                dagRuns?.refetch();
+                                e.stopPropagation();
+                            }}
+                            disabled={dagRuns?.isFetching}
+                            style={{
+                                width: '40px',
+                                height: '20px',
+                            }}
+                        />
                     </div>
-
-                </div>}
+                }
                 style={{
                     ...(isVertical
-                        ? { width: '95vw', justifyContent: 'space-between', display: 'flex', flexDirection: 'row', alignItems: 'center' }
+                        ? {
+                            width: '95vw',
+                            justifyContent: 'space-between',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                        }
                         : { width: cardStyle.manage.size, aspectRatio: '1/1' }),
                     position: 'relative',
                     transition: 'transform 0.3s ease',
@@ -110,17 +150,22 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                 }}
                 className="p-card-hover"
                 onClick={() => openDashboard(data.connection_id)}
-            //                 footer={
-            // <Button icon="pi pi-heart" rounded outlined severity="help" aria-label="Favorite" />
-
-            //                 }
             >
-                <div style={{ display:'flex', gap: 5, flexDirection: 'column', justifyContent: 'center',alignItems:'center' }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        gap: 1,
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <div style={{ fontSize: '10px' }}>{formatLastUpdate(lastUpdate)}</div>
                     <DagRunEye data={dagRuns?.data?.dag_runs || []} />
                     <DagRunStat data={runStat} />
 
                     {!isVertical && (
-                        <div className="button-container">
+                        <div className="button-container" style={{flexDirection:'column'}}>
                             <Button
                                 onClick={(e) => {
                                     openInNewTab(data.ui_url);
@@ -134,7 +179,6 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                             <Button
                                 onClick={(e) => {
                                     handleConfigClick(data.connection_id);
-                                    console.log('handleAddClick');
                                     e.stopPropagation();
                                 }}
                                 icon="pi pi-cog"

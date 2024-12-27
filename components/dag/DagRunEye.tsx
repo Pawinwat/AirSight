@@ -1,7 +1,8 @@
 // components/PipelineEye.tsx
 import { format, parseISO, roundToNearestMinutes } from 'date-fns';
 import * as echarts from 'echarts';
-import { SeriesOption } from 'echarts';
+import { DefaultLabelFormatterCallbackParams, SeriesOption } from 'echarts';
+import { OptionDataValue } from 'echarts/types/src/util/types.js';
 import React, { CSSProperties } from 'react';
 import { getStatusColor } from 'src/constant/colors';
 import { DagRun, DagState } from 'src/types/airflow';
@@ -78,7 +79,7 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
       label: { show: false },
       polarIndex: 0,
       itemStyle: {
-        color: (params: any) => {
+        color: (params: DefaultLabelFormatterCallbackParams | any) => {
           const value = (params?.data?.total || 0) as number;
           // Set up color transition based on value range from green to yellow to red
           if (value < 5) {
@@ -100,7 +101,7 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
       label: { show: false },
       polarIndex: 1,
       itemStyle: {
-        color: (params: any) => {
+        color: (params: DefaultLabelFormatterCallbackParams | any) => {
           const value = (params?.data?.succesRate || 0) as number;
           // Set up color transition based on value range from green to yellow to red
           if (value < 100) {
@@ -111,7 +112,7 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
         },
       },
       tooltip: {
-        valueFormatter(value: any, _dataIndex) {
+        valueFormatter(value: OptionDataValue | any) {
           return value?.toFixed(2)
         },
       }

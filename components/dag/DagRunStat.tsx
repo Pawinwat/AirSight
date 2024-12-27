@@ -1,5 +1,4 @@
-import { Button } from 'primereact/button'
-import React from 'react'
+import { Tag } from 'primereact/tag'
 import { getStatusColor } from 'src/constant/colors'
 import { DagState } from 'src/types/airflow'
 
@@ -17,17 +16,16 @@ function DagRunStat({ data }: DagRunStatProps) {
         >
             {
                 Object.keys(data)?.map(key => (
-                    <Button
-                        outlined
-                        size='small'
-                        style={{
-                            color: getStatusColor(key as DagState)
-                        }}
-                    >
-                        {
-                            data[key]
-                        }
-                    </Button>
+                    <Tag 
+                    key={key}
+                    severity="success" 
+                    value={data[key]}
+                    style={{
+                        backgroundColor: getStatusColor(key as DagState)
+                    }}
+                    ></Tag>
+
+                
                 ))
             }
         </div>
