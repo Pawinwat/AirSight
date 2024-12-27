@@ -32,6 +32,7 @@ import { getStatusColor } from 'src/constant/colors';
 import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { PATH } from 'src/routes';
 import { ConnectionData } from 'src/types/db';
+import DagRunStat from 'src/components/dag/DagRunStat';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale);
 
@@ -48,7 +49,7 @@ interface SingleDagPageServerProps {
 
 
 const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
-    const { connection,dagRuns } = useDagRunsContext()
+    const { connection, dagRuns, taskInstanceData, runStat } = useDagRunsContext()
     const router = useRouter();
     const { query } = router;
     const dagId = query.dagId
@@ -61,29 +62,7 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
         dagId as string,
         dag?.data?.file_token as string
     )
-    // const limit = parseInt((query.limit as string) || '25', 25);
-    // const offset = parseInt((query.offset as string) || '0', 0);
-    // const runParams = {
-    //     offset,
-    //     limit,
-    //     order_by: '-execution_date',
-    // };
-    // const dagRuns = useDagRuns24Hours({
-    //     params: runParams
-    // },
-    //     connectionId as string,
-    //     dagId as string
-    // )
 
-    // const dags = useDag
-    // const tasks = useTaskInstances(
-    //     {params:{}},
-    //     connectionId as string,
-    //     dagId as string,
-    //     selectedRun?.dag_run_id  as string
-    // )
-    // Map status to colors
-    // Prepare data for the scatter plot
     const scatterData = dagRuns?.data?.dag_runs
         .filter((run) => run.start_date && run.end_date) // Ensure dates exist
         .map((run) => {
@@ -221,13 +200,7 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
                                     ))}
 
                             </div>
-                            <DagRunEye
-                                style={{
-                                    height: '180px', width: '250px'
-                                }}
-                                data={dagRuns?.data?.dag_runs || []}
-                                mode='state'
-                            />
+
                         </div>
 
                     </Card>
@@ -275,7 +248,24 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
                         // overflowY:'scroll'
                     }}
                 >
-                    <TaskInstanceView />
+                    {(taskInstanceData && taskInstanceData?.length > 0) ? <TaskInstanceView /> :
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <DagRunEye
+                                data={dagRuns?.data?.dag_runs || []}
+                                style={{
+                                    width: '100%',
+                                    height: '80vh'
+                                }}
+                            />
+                            <DagRunStat data={runStat || {}} />
+                        </div>}
                 </div>
             </div>
         </PageFrame>

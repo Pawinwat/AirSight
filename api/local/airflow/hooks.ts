@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosRequestConfig } from "axios";
+import { useEffect, useState } from "react";
 import { AirflowDagRunsResponse, AirflowDagsResponse, AirflowTaskInstanceResponse, Dag } from "src/types/airflow";
-import { getDagDetails, getDagRuns, getDagRuns24Hours, getDags, getDagSource, getTaskInstanceLogs, getTaskInstances, getTaskInstanceTries, triggerDag } from ".";
+import { fetchDagRunsInBatches, getDagDetails, getDagRuns, getDags, getDagSource, getTaskInstanceLogs, getTaskInstances, getTaskInstanceTries, triggerDag } from ".";
 const currentTime = new Date().toISOString();
 
 
@@ -9,7 +10,7 @@ export const useDags = (config: AxiosRequestConfig, connectionId: string | null)
     return useQuery<AirflowDagsResponse>({
         queryKey: ['useDags', connectionId, config],
         queryFn: () => getDags(config, connectionId as string),
-        enabled:  !!connectionId,
+        enabled: !!connectionId,
         placeholderData: {
             dags: [],
             total_entries: 0
@@ -23,7 +24,7 @@ export const useDagDetails = (config: AxiosRequestConfig, connectionId: string |
         queryFn: () => getDagDetails(config, connectionId as string, dagId as string),
         enabled: !!dagId && !!connectionId,
         // placeholderData: {
-        
+
         // }
     });
 };
@@ -32,7 +33,7 @@ export const useDagSources = (config: AxiosRequestConfig, connectionId: string |
     return useQuery<string>({
         queryKey: ['useDagSources', connectionId, dagId, config, fileToken],
         queryFn: () => getDagSource(config, connectionId as string, dagId as string, fileToken),
-        enabled: !!dagId && !!connectionId &&  !!fileToken,
+        enabled: !!dagId && !!connectionId && !!fileToken,
         placeholderData: ""
     });
 };
@@ -50,15 +51,56 @@ export const useDagRuns = (config: AxiosRequestConfig, connectionId: string | nu
 };
 
 export const useDagRuns24Hours = (config: AxiosRequestConfig, connectionId: string | null, dagId: string | null) => {
-    return useQuery<AirflowDagRunsResponse>({
-        queryKey: ['useDagRuns24Hours', connectionId, dagId, config],
-        queryFn: () => getDagRuns24Hours(config, connectionId as string, dagId as string),
-        enabled: !!dagId && !!connectionId,
-        placeholderData: {
-            dag_runs: [],
-            total_entries: 0
+    const defaultData = {
+        dag_runs: [],
+        total_entries: 0
+    }
+    const [data, setData] = useState<AirflowDagRunsResponse>(defaultData)
+    const [isFetching, setIsFetching] = useState<boolean>(false)
+    // const [runStat, setRunStat] = useState<boolean>(false)
+
+    useEffect(() => {
+        handleFetch()
+    }, [connectionId, dagId])
+
+    const resetData = ()=>{
+        setData(defaultData)
+    }
+
+    const refetch = ()=>{
+        resetData()
+        handleFetch()
+    }
+
+    const handleFetch = async () => {
+        setIsFetching(true)
+        let totalEntries = 0;
+       try {
+        for await (const batch of fetchDagRunsInBatches(config, connectionId as string, dagId as string)) {
+            setData((prev) => (
+                {
+                    dag_runs: [...prev?.dag_runs, ...batch.dag_runs],
+                    total_entries: totalEntries
+                }
+            ))
         }
-    });
+       }
+       catch(e){
+        console.log(e)
+
+       }
+       finally{
+        setIsFetching(false)
+       }
+    }
+
+
+    return {
+        data,
+        isFetching,
+        isLoading:isFetching,
+        refetch
+    }
 };
 
 export const useTaskInstances = (config: AxiosRequestConfig, connectionId: string, dagId: string, dagRunId: string) => {

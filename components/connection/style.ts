@@ -1,5 +1,5 @@
 export const cardStyle = {
     manage:{
-        size:'350px'
+        size:'400px'
     }
 }

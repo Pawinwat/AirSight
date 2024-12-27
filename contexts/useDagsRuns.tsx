@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
-import { useDagRuns, useDagRuns24Hours, useTaskInstances } from 'src/api/local/airflow/hooks';
+import { useDagRuns24Hours, useTaskInstances } from 'src/api/local/airflow/hooks';
 import { useConnection } from 'src/api/local/airsight/hooks';
 import { DagRun, TaskInstance } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
@@ -11,7 +11,7 @@ interface DagRunsContextValues {
     // setConnection: React.Dispatch<React.SetStateAction<ConnectionData | null>>;
     runData: DagRun[];
     runStat: Record<string, number> | undefined;
-    dagRuns: ReturnType<typeof useDagRuns>; // Type for the `dagRuns` hook
+    dagRuns: ReturnType<typeof useDagRuns24Hours>; // Type for the `dagRuns` hook
     handleDagRunClick: (run: DagRun) => void;
     handleStatusFilterClick: (status: string) => void;
     selectedRunsTags: string[];
@@ -30,8 +30,8 @@ interface TaskProviderProps {
 export const DagRunsProvider = ({ children }: TaskProviderProps) => {
     const router = useRouter();
     const { query } = router;
-    const dagId = query.dagId || `~`
-    const connectionId = query.connectionId as string
+    const dagId = query?.dagId || `~`
+    const connectionId = query?.connectionId as string
 
     // const [connection, setConnection] = useState<ConnectionData | null>(null)
     // const [dagId, setDagId] = useState<string | null>(null)
@@ -68,6 +68,7 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
         order_by: '-execution_date',
 
     }
+    // const [dagRunsTotal, setDagRunsTotal] = useState<AirflowDagRunsResponse>({dag_runs:[],total_entries:0})
     const dagRuns = useDagRuns24Hours({
         params: runParams
     },

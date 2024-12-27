@@ -1,16 +1,14 @@
 import { AxiosHeaders } from 'axios';
-import { motion, AnimatePresence } from 'framer-motion'; // Import AnimatePresence for transitions
+import { AnimatePresence, motion } from 'framer-motion'; // Import AnimatePresence for transitions
 import { useRouter } from 'next/router'; // Import the useRouter hook
 import { Card } from 'primereact/card';
 import React, { useState } from 'react'; // Import useState
 import { getInstanceStatus, getVersion } from 'src/api/airflow';
+import { cardStyle } from 'src/components/connection/style';
 import prisma from 'src/lib/prisma';
+import { PATH } from 'src/routes';
 import ConnectionCard from '../../../components/connection/ConnectionCard';
 import { MainPageProps } from '../../../types/main-page';
-import { PATH } from 'src/routes';
-import { Button } from 'primereact/button';
-import { ButtonGroup } from 'primereact/buttongroup';
-import { cardStyle } from 'src/components/connection/style';
 
 export async function getServerSideProps() {
   // Fetch connections from the database
@@ -55,16 +53,16 @@ export async function getServerSideProps() {
 
 const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
   const router = useRouter(); // Initialize the useRouter hook
-  const [isVertical, setIsVertical] = useState(false); // State to toggle layout direction
+  const [isVertical, _setIsVertical] = useState(false); // State to toggle layout direction
 
   const handleAddClick = (connectionId?: string) => {
     const targetUrl = PATH.config(connectionId as string);
     router.push(targetUrl); // Navigate to the /config page
   };
 
-  const toggleDirection = () => {
-    setIsVertical(!isVertical); // Toggle between vertical and horizontal
-  };
+  // const toggleDirection = () => {
+  //   setIsVertical(!isVertical); // Toggle between vertical and horizontal
+  // };
 
   return (
     <div
@@ -76,10 +74,10 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
         alignItems: 'center',
       }}
     >
-      <ButtonGroup>
+      {/* <ButtonGroup>
         <Button onClick={toggleDirection} disabled={!isVertical} label="Manage" icon="pi pi-th-large" />
         <Button onClick={toggleDirection} disabled={isVertical} label="Monitoring" icon="pi pi-list" />
-      </ButtonGroup>
+      </ButtonGroup> */}
       {/* <button
         onClick={toggleDirection}
         style={{

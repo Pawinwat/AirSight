@@ -26,6 +26,7 @@ import { PATH } from 'src/routes';
 import { AirflowDagsResponse, Dag } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import ConnectionSelector from '../../../components/ConnectionSelector';
+import DagRunStat from 'src/components/dag/DagRunStat';
 
 interface DagsServerProps {
   connection: ConnectionData
@@ -59,7 +60,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 export default function DagsPage({ connections }: DagsServerProps) {
   const router = useRouter();
   const { query } = router;
-  const { connection, dagRuns, taskInstanceData } = useDagRunsContext()
+  const { connection, dagRuns, taskInstanceData, runStat } = useDagRunsContext()
 
   const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
   // Pagination variables
@@ -337,14 +338,25 @@ export default function DagsPage({ connections }: DagsServerProps) {
           }}
         >
           {(taskInstanceData && taskInstanceData?.length > 0) ? <TaskInstanceView /> :
-            <DagRunEye
-              data={dagRuns?.data?.dag_runs || []}
+            <div
               style={{
-                width: '100%',
-                height: '80vh'
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
               }}
-            />}
+            >
+              <DagRunEye
+                data={dagRuns?.data?.dag_runs || []}
+                style={{
+                  width: '100%',
+                  height: '80vh'
+                }}
+              />
+              <DagRunStat data={runStat || {}} />
+            </div>
 
+          }
         </div>
       </div>
     </PageFrame>

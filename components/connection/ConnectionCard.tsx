@@ -7,6 +7,7 @@ import { PATH } from 'src/routes';
 import { InstanceStatus } from 'src/types/airflow';
 import { ConnectionCardData } from '../../types/main-page';
 import DagRunEye from '../dag/DagRunEye';
+import DagRunStat from '../dag/DagRunStat';
 import StatusChip from './StatusChip';
 import { cardStyle } from './style';
 interface ConnectionCardProps {
@@ -26,6 +27,11 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
         data?.connection_id as string,
         `~`
     );
+    const runStat = dagRuns?.data?.dag_runs?.reduce((acc, run) => {
+        acc[run.state] = (acc[run.state] || 0) + 1; // Increment the count for the state
+        return acc;
+    }, {} as Record<string, number>);
+
 
     const openInNewTab = (url?: string | null) => {
         if (!url) return;
@@ -42,38 +48,6 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
         router.push(PATH.config(connectionId));
     };
 
-    // Sample data for the bar chart
-    // const barChartData = {
-    //     labels: ['Success', 'Failed', 'Running', 'Queued'],
-    //     datasets: [
-    //         {
-    //             label: 'DAG Runs',
-    //             backgroundColor: ['#4caf50', '#f44336', '#2196f3', '#ff9800'],
-    //             data: [
-    //                 dagRuns?.data?.dag_runs?.filter(run => run.state == 'success')?.length || 0,
-    //                 dagRuns?.data?.dag_runs?.filter(run => run.state == 'failed')?.length || 0,
-    //                 dagRuns?.data?.dag_runs?.filter(run => run.state == 'running')?.length || 0,
-    //                 dagRuns?.data?.dag_runs?.filter(run => run.state == 'queued')?.length || 0,
-    //             ],
-    //         },
-    //     ],
-    // };
-
-    // const barChartOptions: ChartOptions = {
-    //     indexAxis: 'x', // For vertical bar chart
-    //     plugins: {
-    //         legend: {
-    //             display: true,
-    //             position: 'top',
-    //         },
-    //     },
-    //     responsive: true,
-    //     scales: {
-    //         x: {
-    //             beginAtZero: true,
-    //         },
-    //     },
-    // };
 
     return (
         <motion.div
@@ -89,13 +63,13 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
         >
             <Card
                 title={<div
-                    style={{ 
+                    style={{
                         display: 'flex',
-                         gap: 5,
-                          flexDirection: 'row',
+                        gap: 5,
+                        flexDirection: 'row',
                         //   justifyContent:'center',
-                          alignItems:'center'
-                         }}
+                        alignItems: 'center'
+                    }}
                 >
                     <div>
                         {data.name}
@@ -104,7 +78,6 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                         {data?.version?.version}
                     </div>
                     <div style={{ display: 'flex', gap: 5 }}>
-
                         {Object.keys(data.status || {})
                             .filter(
                                 (key) =>
@@ -137,9 +110,14 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                 }}
                 className="p-card-hover"
                 onClick={() => openDashboard(data.connection_id)}
+            //                 footer={
+            // <Button icon="pi pi-heart" rounded outlined severity="help" aria-label="Favorite" />
+
+            //                 }
             >
-                <div style={{ display: 'flex', gap: 5, flexDirection: 'row',justifyContent:'center' }}>
+                <div style={{ display:'flex', gap: 5, flexDirection: 'column', justifyContent: 'center',alignItems:'center' }}>
                     <DagRunEye data={dagRuns?.data?.dag_runs || []} />
+                    <DagRunStat data={runStat} />
 
                     {!isVertical && (
                         <div className="button-container">

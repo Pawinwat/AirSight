@@ -4,7 +4,7 @@ import * as echarts from 'echarts';
 import { SeriesOption } from 'echarts';
 import React, { CSSProperties } from 'react';
 import { getStatusColor } from 'src/constant/colors';
-import { DagRun } from 'src/types/airflow';
+import { DagRun, DagState } from 'src/types/airflow';
 import BaseEChart from '../charts/base/Echart';
 
 // Helper function to generate 24-hour time labels at 5-minute intervals
@@ -22,8 +22,9 @@ const generateDailyTimeLabels = (): string[] => {
 };
 
 // Helper function to map DagRun data to the generated time labels
-const mapDagRunDataToTimeLabels = (data: DagRun[], timeLabels: string[]): Record<string, string | number>[] => {
+const mapDagRunDataToTimeLabels = (data: DagRun[], timeLabels: string[]): [Record<string, string | number>[], Record<string, number>] => {
   const counts: Record<string, Record<string, number>> = {};
+  const stats: Record<string, number> = {};
 
   // Count occurrences of execution_date rounded to the nearest 5 minutes
   data.forEach((item) => {
@@ -32,17 +33,21 @@ const mapDagRunDataToTimeLabels = (data: DagRun[], timeLabels: string[]): Record
     if (!counts[timeString]) {
       counts[timeString] = {}
     }
+    if (!stats[item?.state]) {
+      stats[item?.state] = 0
+    }
     if (!counts[timeString]?.[item?.state]) {
       counts[timeString][item?.state] = 0
     }
     counts[timeString]['total'] = (counts[timeString]['total'] || 0) + 1;
     counts[timeString][item?.state] = (counts[timeString][item?.state] || 0) + 1;
+    stats[item?.state] = (stats[item?.state] || 0) + 1;
 
   });
   // Map the counts to the generated time labels
-  return timeLabels.map((label) => {
+  const runs = timeLabels.map((label) => {
 
-    const succesRate = (counts[label]?.success / counts[label]?.total) * 100
+    const succesRate = ((counts[label]?.success / counts[label]?.total) * 100)
     return {
       time: label,
       ...counts[label],
@@ -50,6 +55,7 @@ const mapDagRunDataToTimeLabels = (data: DagRun[], timeLabels: string[]): Record
       failRate: 100 - succesRate
     }
   });
+  return [runs, stats]
 };
 
 interface DagRunEyeProps {
@@ -60,7 +66,7 @@ interface DagRunEyeProps {
 
 const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) => {
   const timeLabels = generateDailyTimeLabels();
-  const dagRunCounts = mapDagRunDataToTimeLabels(data, timeLabels);
+  const [dagRunCounts, dagRunStats] = mapDagRunDataToTimeLabels(data, timeLabels);
   // const isCount = mode == 'count'
   // Define the series option
   const series: SeriesOption[] = [
@@ -76,13 +82,11 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
           const value = (params?.data?.total || 0) as number;
           // Set up color transition based on value range from green to yellow to red
           if (value < 5) {
-            return `rgb(0, ${Math.floor((value / 1.33) * 255)}, 0)`; // Green
+            return getStatusColor('success'); // Green
           } else if (value < 10) {
-            const intensity = Math.floor(((value - 1.33) / 1.34) * 255);
-            return `rgb(${intensity}, 255, 0)`; // Yellow
+            return getStatusColor('upstream_failed'); // Yellow
           } else {
-            const intensity = Math.floor(((4 - value) / 1.33) * 255);
-            return `rgb(255, ${intensity}, 0)`; // Red
+            return getStatusColor('failed'); // Red
           }
         },
       },
@@ -99,16 +103,18 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
         color: (params: any) => {
           const value = (params?.data?.succesRate || 0) as number;
           // Set up color transition based on value range from green to yellow to red
-          if (value < 25) {
-            return getStatusColor('failed')
-          } else if (value < 100) {
+          if (value < 100) {
             return getStatusColor('upstream_failed')
           } else {
             return getStatusColor('success')
-
           }
         },
       },
+      tooltip: {
+        valueFormatter(value: any, _dataIndex) {
+          return value?.toFixed(2)
+        },
+      }
     },
     {
       type: 'bar',
@@ -122,15 +128,46 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
         color: (_params: any) => getStatusColor('failed')
       },
     },
+    {
+      name: 'run stats',
+      type: 'pie',
+      // roseType: 'area',
+
+      selectedMode: 'single',
+      radius: ['85%', '90%'],
+      label: {
+        show: false,
+        position: 'inner',
+        fontSize: 14
+      },
+      labelLine: {
+        show: false
+      },
+      data: Object.keys(dagRunStats)?.map(key => ({ value: dagRunStats?.[key], name: key })),
+      itemStyle: {
+        color: (params) => getStatusColor(params.name as DagState)
+      },
+      tooltip: {
+        // valueFormatter(value: any, _dataIndex) {
+        //   return value?.toFixed(2)
+        // },
+      }
+    }
   ];
 
   // Define the chart options
   const option: echarts.EChartsOption = {
-    polar: [{ radius: ['10%', '60%'] }, { radius: ['70%', '90%'] }],
+    polar: [{ radius: ['20%', '50%'] }, { radius: ['65%', '80%'] }],
     radiusAxis: [{ polarIndex: 0 }, { polarIndex: 1 }],
     dataset: {
       dimensions: ['time', 'total', 'success', 'failed', 'running', 'succesRate', 'failRate'],
       source: dagRunCounts,
+    },
+    grid: {
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0
     },
     angleAxis: [
       {
