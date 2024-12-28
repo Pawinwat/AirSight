@@ -10,39 +10,32 @@ type Delay = number | null;
  * @returns A ref object containing the interval ID.
  */
 function useInterval(callback: Callback, delay: Delay) {
-  const intervalRef = useRef<number | null>(null);
-  const savedCallback = useRef<Callback>(callback);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Update the saved callback if it changes
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
+    // Update the saved callback if it changes
+    //   useEffect(() => {
+    //     savedCallback.current = callback;
+    //   }, [callback]);
 
-  // Set up the interval
-  useEffect(() => {
-    // If delay is null, do not set up the interval
-    if (delay === null) {
-      return;
-    }
+    // Set up the interval
+    useEffect(() => {
+        // If delay is null, do not set up the interval
+        if (!delay) {
+            return;
+        }
+        // Set the interval and store its ID in the ref
+        intervalRef.current = setInterval(callback, delay);
 
-    // Define the tick function
-    const tick = () => {
-      savedCallback.current();
-    };
+        // Clear the interval on component unmount or when delay changes
+        return () => {
+            if (intervalRef.current !== null) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [delay]);
 
-    // Set the interval and store its ID in the ref
-    intervalRef.current = window.setInterval(tick, delay);
-
-    // Clear the interval on component unmount or when delay changes
-    return () => {
-      if (intervalRef.current !== null) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [delay]);
-
-  // Return the interval ref for potential manual control
-  return intervalRef;
+    // Return the interval ref for potential manual control
+    return intervalRef;
 }
 
 export default useInterval;

@@ -4,9 +4,10 @@ import * as echarts from 'echarts';
 interface EChartComponentProps {
   option: echarts.EChartsOption;
   style?: React.CSSProperties;
+  onInit?:(_:echarts.ECharts)=>void
 }
 
-const EChartComponent: React.FC<EChartComponentProps> = ({ option, style }) => {
+const EChartComponent: React.FC<EChartComponentProps> = ({ option, style,onInit }) => {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
@@ -17,6 +18,9 @@ const EChartComponent: React.FC<EChartComponentProps> = ({ option, style }) => {
 
       // Set initial option
       chartInstance.current.setOption(option);
+      if(!!onInit){
+        onInit(chartInstance.current)
+      }
     }
 
     return () => {

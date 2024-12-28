@@ -2,6 +2,8 @@ import { useRouter } from 'next/router';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 import { useDagRuns24Hours, useTaskInstances } from 'src/api/local/airflow/hooks';
 import { useConnection } from 'src/api/local/airsight/hooks';
+import { defaultInterval } from 'src/constant';
+import useInterval from 'src/hooks/useInterval';
 import { DagRun, TaskInstance } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 
@@ -81,7 +83,9 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
         acc[run.state] = (acc[run.state] || 0) + 1; // Increment the count for the state
         return acc;
     }, {} as Record<string, number>);
-
+    const { } = useInterval(() => {
+        dagRuns.refetch()
+    }, defaultInterval)
 
     const taskInstance = useTaskInstances(
         {

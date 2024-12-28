@@ -1,0 +1,1 @@
+export const defaultInterval = 1000*60*7

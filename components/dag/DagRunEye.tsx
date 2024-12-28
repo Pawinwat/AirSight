@@ -3,10 +3,11 @@ import { format, parseISO, roundToNearestMinutes } from 'date-fns';
 import * as echarts from 'echarts';
 import { DefaultLabelFormatterCallbackParams, SeriesOption } from 'echarts';
 import { OptionDataValue } from 'echarts/types/src/util/types.js';
-import React, { CSSProperties } from 'react';
+import React, { CSSProperties, useState } from 'react';
 import { getStatusColor } from 'src/constant/colors';
 import { DagRun, DagState } from 'src/types/airflow';
 import BaseEChart from '../charts/base/Echart';
+import useInterval from 'src/hooks/useInterval';
 
 // Helper function to generate 24-hour time labels at 5-minute intervals
 const generateDailyTimeLabels = (): string[] => {
@@ -68,15 +69,38 @@ interface DagRunEyeProps {
 const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) => {
   const timeLabels = generateDailyTimeLabels();
   const [dagRunCounts, dagRunStats] = mapDagRunDataToTimeLabels(data, timeLabels);
-  // const isCount = mode == 'count'
-  // Define the series option
+
+  const [now, setNow] = useState<Date>(new Date())
+
+  const [nowSeries, setNowSeries] = useState<string>('#FFF')
+  useInterval(()=>{
+    setNowSeries(prev=>prev=='#FFF'?'rgba(255,255,255,.5)':'#FFF')
+    setNow(new Date())
+  },2000)
+  const tick = timeLabels?.map(time => ({ time, value: (format(roundToNearestMinutes(now, { nearestTo: 5 }), 'HH:mm:ss') == time) ? 1 : 0 }))
   const series: SeriesOption[] = [
     {
       type: 'bar',
+      name: 'Now',
+      coordinateSystem: 'polar',
+      datasetIndex: 1,
+      label: { show: false },
+      polarIndex: 2,
+      itemStyle: {
+        color: nowSeries
+      },
+      tooltip: {
+        show: false
+      },
+    },
+    {
+      type: 'bar',
       encode: { angle: 'time', radius: 'total' },
+      datasetIndex: 0,
       // data: dagRunCounts?.map(rec=>rec?.total || 0),
       coordinateSystem: 'polar',
       label: { show: false },
+      name: 'Jobs',
       polarIndex: 0,
       itemStyle: {
         color: (params: DefaultLabelFormatterCallbackParams | any) => {
@@ -95,11 +119,12 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
     {
       type: 'bar',
       encode: { angle: 'time', radius: 'succesRate' },
+      datasetIndex: 0,
       stack: 'status',
-      // data: dagRunCounts?.map(rec => (Math.round((rec?.success as number) / (rec?.total as number)) * 100) || null),
       coordinateSystem: 'polar',
       label: { show: false },
       polarIndex: 1,
+      name: 'Succes',
       itemStyle: {
         color: (params: DefaultLabelFormatterCallbackParams | any) => {
           const value = (params?.data?.succesRate || 0) as number;
@@ -113,14 +138,16 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
       },
       tooltip: {
         valueFormatter(value: OptionDataValue | any) {
-          return value?.toFixed(2)
+          return value ? value?.toFixed(2) : 0
         },
       }
     },
     {
       type: 'bar',
       encode: { angle: 'time', radius: 'failRate' },
+      datasetIndex: 0,
       stack: 'status',
+      name: 'Failed',
       // data: dagRunCounts?.map(rec => (Math.round((rec?.success as number) / (rec?.total as number)) * 100) || null),
       coordinateSystem: 'polar',
       label: { show: false },
@@ -128,7 +155,13 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
       itemStyle: {
         color: (_params: any) => getStatusColor('failed')
       },
+      tooltip: {
+        valueFormatter(value: OptionDataValue | any) {
+          return value ? value?.toFixed(2) : 0
+        },
+      }
     },
+
     {
       name: 'run stats',
       type: 'pie',
@@ -148,22 +181,31 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
       itemStyle: {
         color: (params) => getStatusColor(params.name as DagState)
       },
-      tooltip: {
-        // valueFormatter(value: any, _dataIndex) {
-        //   return value?.toFixed(2)
-        // },
-      }
+      // tooltip: {
+      // valueFormatter(value: any, _dataIndex) {
+      //   return value?.toFixed(2)
+      // },
+      // }
     }
   ];
 
   // Define the chart options
   const option: echarts.EChartsOption = {
-    polar: [{ radius: ['20%', '50%'] }, { radius: ['65%', '80%'] }],
-    radiusAxis: [{ polarIndex: 0 }, { polarIndex: 1 }],
-    dataset: {
-      dimensions: ['time', 'total', 'success', 'failed', 'running', 'succesRate', 'failRate'],
-      source: dagRunCounts,
+    axisPointer: {
+      show: 'auto'
     },
+    polar: [{ radius: ['20%', '50%'] }, { radius: ['65%', '80%'] }, { radius: ['20%', '65%'] }],
+    radiusAxis: [{ polarIndex: 0 }, { polarIndex: 1 }, { polarIndex: 2, show: false }],
+    dataset: [
+      {
+        dimensions: ['time', 'total', 'success', 'failed', 'running', 'succesRate', 'failRate'],
+        source: dagRunCounts,
+      },
+      {
+        dimensions: ['time', 'value'],
+        source: tick
+      }
+    ],
     grid: {
       top: 0,
       bottom: 0,
@@ -183,6 +225,13 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
         data: timeLabels,
         startAngle: 90,
         show: false
+      },
+      {
+        polarIndex: 2,
+        type: 'category',
+        data: timeLabels,
+        startAngle: 90,
+        show: false
       }
     ],
     tooltip: {
@@ -197,6 +246,7 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
 
   return (
     <BaseEChart
+
       option={option}
       style={{
         height: '300px',

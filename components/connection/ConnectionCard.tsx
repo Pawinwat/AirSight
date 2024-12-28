@@ -11,6 +11,8 @@ import DagRunStat from '../dag/DagRunStat';
 import StatusChip from './StatusChip';
 import { cardStyle } from './style';
 import { useEffect, useState } from 'react';
+import useInterval from 'src/hooks/useInterval';
+import { defaultInterval } from 'src/constant';
 
 interface ConnectionCardProps {
     data: ConnectionCardData;
@@ -60,7 +62,9 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
 
     const formatLastUpdate = (date: Date | null) =>
         date ? date.toLocaleString('en-US', { hour12: true }) : 'N/A';
-
+    const { } = useInterval(() => {
+        dagRuns.refetch()
+    }, defaultInterval)
     return (
         <motion.div
             key={data.connection_id}
@@ -165,7 +169,7 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                     <DagRunStat data={runStat} />
 
                     {!isVertical && (
-                        <div className="button-container" style={{flexDirection:'column'}}>
+                        <div className="button-container" style={{ flexDirection: 'column' }}>
                             <Button
                                 onClick={(e) => {
                                     openInNewTab(data.ui_url);
