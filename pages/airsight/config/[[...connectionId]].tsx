@@ -8,7 +8,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Panel } from 'primereact/panel';
 import { Toast } from 'primereact/toast';
 import React, { useEffect, useRef, useState } from 'react';
-import { useConnection, useSaveConnection, useTestConnection } from 'src/api/local/airsight/hooks';
+import { useConnection, useDeleteConnection, useSaveConnection, useTestConnection } from 'src/api/local/airsight/hooks';
 import StatusCard from 'src/components/connection/StatusCard';
 import { CARD_GAP } from 'src/components/layout/constants';
 import { PATH } from 'src/routes';
@@ -27,6 +27,7 @@ const AirflowConnectionForm: React.FC = () => {
     });
     const testConnection = useTestConnection()
     const saveConnection = useSaveConnection()
+    const deleteConection = useDeleteConnection()
     const initialValues: Partial<ConnectionFormData> = {
         connection_id: '',
         name: '',
@@ -90,6 +91,9 @@ const AirflowConnectionForm: React.FC = () => {
     });
     const [init, setInit] = useState(false)
 
+
+
+
     useEffect(() => {
         if (connection.isSuccess) {
             formik.resetForm({
@@ -99,8 +103,6 @@ const AirflowConnectionForm: React.FC = () => {
                 } as ConnectionFormData
             });
             setInit(true)
-            // formik.setTouched(false)
-
         }
     }, [connection?.isFetching]);
 
@@ -110,7 +112,7 @@ const AirflowConnectionForm: React.FC = () => {
         }
     }, [connection?.isFetching, connection.isFetched, init])
 
-    const isLoading = connection.isFetching || testConnection?.isPending
+    const isLoading = connection.isFetching || testConnection?.isPending || deleteConection?.isPending
 
 
     const handleTest = async () => {
@@ -134,10 +136,14 @@ const AirflowConnectionForm: React.FC = () => {
                 ? 'pi pi-times'
                 : '';
 
-
+    useEffect(() => {
+        if (deleteConection?.isSuccess) {
+            toast?.current?.show({ severity: 'error', summary: 'Confirmed', detail: 'Connection deleted', life: 3000, icon: 'pi pi-check' });
+            router.push(PATH.main)
+        }
+    }, [deleteConection?.isPending])
     const accept = () => {
-        toast?.current?.show({ severity: 'error', summary: 'Confirmed', detail: 'Connection deleted', life: 3000,icon:'pi pi-check' });
-        router.push(PATH.main)
+        deleteConection.mutate({ connectionId: connectionId as string })
     };
 
     // const reject = () => {

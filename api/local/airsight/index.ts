@@ -50,6 +50,19 @@ export const updateConnection = async (
  * Get a connection.
  * @param connectionId - The ID of the connection.
  */
+export const deleteConnection = async (
+    connectionId: string,
+) => {
+    const { data } = await localAxios.delete<ConnectionData>(
+        `/api/v1/connections/${connectionId}`
+    );
+    return data;
+};
+
+/**
+ * Get a connection.
+ * @param connectionId - The ID of the connection.
+ */
 export const testConnection = async (
     config: AxiosRequestConfig,
 ) => {

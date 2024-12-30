@@ -1,6 +1,6 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getConnectionById, updateConnectionById, createConnection } from 'src/db/connection';
+import { getConnectionById, updateConnectionById, createConnection, deleteConnection } from 'src/db/connection';
 
 export default async function connectionIdHandler(req: NextApiRequest, res: NextApiResponse) {
     try {
@@ -21,6 +21,10 @@ export default async function connectionIdHandler(req: NextApiRequest, res: Next
         }
         else if (method == 'POST') {
             const connection = await createConnection(req.body)
+            return res.status(200).json(connection);
+        }
+        else if (method == 'DELETE') {
+            const connection = await deleteConnection(connectionId as string)
             return res.status(200).json(connection);
         }
         else {

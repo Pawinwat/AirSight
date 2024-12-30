@@ -182,7 +182,7 @@ function ConnectionCard({ data, isVertical }: ConnectionCardProps) {
                             />
                             <Button
                                 onClick={(e) => {
-                                    handleConfigClick(data.connection_id);
+                                    handleConfigClick(data.connection_id as string);
                                     e.stopPropagation();
                                 }}
                                 icon="pi pi-cog"

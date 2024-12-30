@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosRequestConfig } from "axios";
 import { ConnectionData } from "src/types/db";
-import { createConnection, getConnection, testConnection, updateConnection } from ".";
+import { createConnection, deleteConnection, getConnection, testConnection, updateConnection } from ".";
 
 export const useConnection = ({ connectionId }: { connectionId: string }) => {
     return useQuery<ConnectionData>({
@@ -30,5 +30,13 @@ export const useSaveConnection = () => {
     return useMutation({
         mutationFn: ({ connectionId, payload }: SaveConnectionPayload) => connectionId ? updateConnection(connectionId, payload) : createConnection(payload),
         // enabled: !!connectionId
+    });
+};
+interface DeleteConnectionPayload{
+    connectionId: string
+}
+export const useDeleteConnection = () => {
+    return useMutation({
+        mutationFn: ({ connectionId }: DeleteConnectionPayload) => deleteConnection(connectionId as string),
     });
 };

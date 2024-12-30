@@ -46,3 +46,15 @@ export const createConnection = async (payload: ConnectionData) => {
     return connections
 }
 
+export const deleteConnection = async (connectionId: string) => {
+    await prisma.connection.update({
+        where: {
+            connection_id: connectionId,
+            is_active: true,
+        },
+        data: {
+            is_active: false
+        }
+    });
+    return { message: 'Connection deleted' }
+}
