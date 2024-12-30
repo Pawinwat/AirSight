@@ -15,4 +15,6 @@ model connection {
   is_active        Boolean? @default(true)
   ui_url           String?  @db.VarChar
   refresh_interval String?  @default(dbgenerated("60")) @db.VarChar
+  username         String?  @db.VarChar
+  password         String?  @db.VarChar
 }

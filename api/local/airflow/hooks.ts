@@ -62,6 +62,7 @@ export const useDagRuns24Hours = (config: AxiosRequestConfig, connectionId: stri
     // const [runStat, setRunStat] = useState<boolean>(false)
 
     useEffect(() => {
+        if(!connectionId || !dagId) return;
         refetch()
     }, [connectionId, dagId])
 
