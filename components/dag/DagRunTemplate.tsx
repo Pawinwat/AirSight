@@ -63,7 +63,7 @@ const DagRunTemplate = (items: DagRun[], _options?: TemplateOption, onClick?: (_
                 <div style={{ display: 'flex', flexDirection: 'row', gap: CARD_GAP, justifyContent: 'space-between', width: "100%" }}>
                     <div>
                         <Link
-                            href={PATH.mainDagId((externalProps?.connection as ConnectionData)?.connection_id, run.dag_id)}
+                            href={PATH.mainDagId((externalProps?.connection as ConnectionData)?.connection_id as string, run.dag_id)}
                             style={{ textDecoration: 'none', ...styles.dagId }}
                         >
                             {run.dag_id}

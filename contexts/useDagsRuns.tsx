@@ -68,7 +68,6 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
         offset: 0,
         limit: 200,
         order_by: '-execution_date',
-
     }
     // const [dagRunsTotal, setDagRunsTotal] = useState<AirflowDagRunsResponse>({dag_runs:[],total_entries:0})
     const dagRuns = useDagRuns24Hours({

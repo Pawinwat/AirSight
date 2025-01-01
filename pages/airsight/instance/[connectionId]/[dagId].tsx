@@ -1,18 +1,16 @@
-import { Chart } from 'primereact/chart';
 import { InputTextarea } from 'primereact/inputtextarea';
 import React from 'react';
 import { Dag, DagRun, TaskInstance } from 'src/types/airflow';
 
 import {
     CategoryScale,
-    Chart as ChartJS, // For time-based x-axis
-    ChartOptions,
+    Chart as ChartJS,
     Legend,
     LinearScale,
     PointElement,
     TimeScale,
     Title,
-    Tooltip,
+    Tooltip
 } from 'chart.js';
 import 'chartjs-adapter-date-fns'; // Ensure the adapter is installed
 import Link from 'next/link';
@@ -20,10 +18,12 @@ import { useRouter } from 'next/router';
 import { Card } from 'primereact/card';
 import { MenuItem } from 'primereact/menuitem';
 import { Tag } from 'primereact/tag';
-import { useDagDetails, useDagSources } from 'src/api/local/airflow/hooks';
+import { useDagDetails, useDagRuns, useDagSources } from 'src/api/local/airflow/hooks';
 import Breadcrumbs from 'src/components/breadcrumb/Breadcrumbs';
+import RunHistory from 'src/components/charts/RunHistory';
 import DagRunEye from 'src/components/dag/DagRunEye';
 import DagRunList from 'src/components/dag/DagRunList';
+import DagRunStat from 'src/components/dag/DagRunStat';
 import RunDagButton from 'src/components/dag/RunDagButton';
 import { CARD_GAP } from 'src/components/layout/constants';
 import PageFrame from 'src/components/layout/PageFrame';
@@ -32,7 +32,6 @@ import { getStatusColor } from 'src/constant/colors';
 import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { PATH } from 'src/routes';
 import { ConnectionData } from 'src/types/db';
-import DagRunStat from 'src/components/dag/DagRunStat';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, Title, Tooltip, Legend, TimeScale);
 
@@ -50,6 +49,7 @@ interface SingleDagPageServerProps {
 
 const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
     const { connection, dagRuns, taskInstanceData, runStat } = useDagRunsContext()
+
     const router = useRouter();
     const { query } = router;
     const dagId = query.dagId
@@ -62,8 +62,19 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
         dagId as string,
         dag?.data?.file_token as string
     )
+    const runParams = {
+        offset: 0,
+        limit: 200,
+        order_by: '-execution_date',
+    }
+    const lineRunStat = useDagRuns({
+        params: runParams
+    },
+        connectionId,
+        dagId as string
+    )
 
-    const scatterData = dagRuns?.data?.dag_runs
+    const scatterData = lineRunStat?.data?.dag_runs
         .filter((run) => run.start_date && run.end_date) // Ensure dates exist
         .map((run) => {
             const startDate = new Date(run.start_date as string).getTime();
@@ -71,54 +82,10 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
             const executionDate = new Date(run.execution_date); // X-axis value
             const runTime = (endDate - startDate) / 1000; // Y-axis value in seconds
             const statusColor = getStatusColor(run.state); // Use color based on status
-            return { x: executionDate, y: runTime, backgroundColor: statusColor };
+            return { executionDate,runTime, statusColor,state:run.state };
         });
 
-    // Chart.js data format
-    const chartData = {
-        datasets: [
-            {
-                label: 'Run Time vs Execution Date',
-                data: scatterData,
-                pointBackgroundColor: scatterData?.map((point) => point.backgroundColor), // Assign colors dynamically
-                pointRadius: 5,
-            },
-        ],
-    };
 
-    // Chart.js options
-    const chartOptions: ChartOptions<'line'> = {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'top',
-            },
-            title: {
-                display: true,
-                text: 'DAG Run Times',
-            },
-        },
-        scales: {
-            x: {
-                type: 'time', // Time-based x-axis
-                time: {
-                    unit: 'day',
-                },
-                title: {
-                    display: true,
-                    text: 'Execution Date',
-                },
-            },
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Run Time (seconds)',
-                },
-            },
-        },
-    };
 
 
     const items: MenuItem[] = [
@@ -208,7 +175,9 @@ const SingleDagPage: React.FC<SingleDagPageServerProps> = () => {
                     <Card
                         title='DAG Runs Execution Times'
                     >
-                        <Chart type="line" style={{ height: '40vh', width: '100%' }} data={chartData} options={chartOptions} />
+                        <RunHistory 
+                        data={scatterData || []}
+                        />
                     </Card>
                 </div>
 

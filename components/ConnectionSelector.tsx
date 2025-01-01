@@ -61,7 +61,7 @@ function ConnectionSelector({ connections }: ConnectionSelectorProps) {
                 <Button
                     key={conn.connection_id}
                     onClick={() => {
-                        router.push(PATH.connectionId(conn.connection_id), { scroll: false })
+                        router.push(PATH.connectionId(conn.connection_id as string), { scroll: false })
                     }}
                     style={activeTab === conn.connection_id ? {
                         transform: 'translateY(var(--translate-y)) translateX(var(--translate-x))',
