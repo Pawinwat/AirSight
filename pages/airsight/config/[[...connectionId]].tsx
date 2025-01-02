@@ -112,9 +112,8 @@ const AirflowConnectionForm: React.FC = () => {
         }
     }, [connection?.isFetching, connection.isFetched, init])
 
-    const isLoading = connection.isFetching || testConnection?.isPending || deleteConection?.isPending
-
-
+    const isLoading = connection.isFetching  || deleteConection?.isPending
+    const isTesting = isLoading || testConnection?.isPending
     const handleTest = async () => {
         const valid = await formik.validateForm()
         if (valid?.header) return;
@@ -127,7 +126,7 @@ const AirflowConnectionForm: React.FC = () => {
             }
         })
     };
-    const canTest = !!formik?.values?.api_url
+    const canTest = !!formik?.values?.api_url || !isTesting
     const testIcon = testConnection?.isPending
         ? 'pi pi-spin pi-spinner'
         : testConnection?.isSuccess
