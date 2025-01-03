@@ -30,7 +30,7 @@ function DagRunList({ connection }: DagRunListProps) {
                     handleDagRunClick,
                     {
                         selected: (run: DagRun) => {
-                            return run && !!(run?.dag_run_id == selectedRun?.dag_run_id)
+                            return run && !!(run?.dag_run_id == selectedRun?.dag_run_id) && !!(run?.dag_id == selectedRun?.dag_id)
                         },
                         connection
                     })}
