@@ -20,7 +20,8 @@ interface DagRunsContextValues {
     setSelectedRunsTags: React.Dispatch<React.SetStateAction<string[]>>;
     selectedRun: DagRun | null;
     setSelectedRun: React.Dispatch<React.SetStateAction<DagRun | null>>;
-    taskInstanceData: TaskInstance[] | undefined
+    taskInstanceData: TaskInstance[] | undefined;
+    dagId:string
 }
 
 
@@ -111,7 +112,7 @@ export const DagRunsProvider = ({ children }: TaskProviderProps) => {
             selectedRunsTags, setSelectedRunsTags,
             selectedRun, setSelectedRun,
             taskInstanceData,
-
+            dagId:dagId as string
         }}>
             {children}
         </DagRunsContext.Provider>

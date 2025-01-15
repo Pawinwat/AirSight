@@ -38,11 +38,11 @@ export const useDagSources = (config: AxiosRequestConfig, connectionId: string |
     });
 };
 
-export const useDagRuns = (config: AxiosRequestConfig, connectionId: string | null, dagId: string | null) => {
+export const useDagRuns = (config: AxiosRequestConfig, connectionId: string | null, dagId: string | null,enable?:boolean) => {
     return useQuery<AirflowDagRunsResponse>({
         queryKey: ['dagRuns', connectionId, dagId, config],
         queryFn: () => getDagRuns(config, connectionId as string, dagId as string),
-        enabled: !!dagId && !!connectionId,
+        enabled: !!dagId && !!connectionId && (enable || (enable===undefined)),
         placeholderData: {
             dag_runs: [],
             total_entries: 0

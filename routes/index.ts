@@ -6,3 +6,5 @@ export const PATH = {
     mainDagId: (connectionId: string, dagId: string) => createPath(`/instance/${connectionId}/${dagId}`),
     config: (connectionId: string) => createPath(`/config${!!connectionId ? `/${connectionId}` : ''}`)
 }
+
+

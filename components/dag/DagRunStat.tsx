@@ -16,16 +16,16 @@ function DagRunStat({ data }: DagRunStatProps) {
         >
             {
                 Object.keys(data)?.map(key => (
-                    <Tag 
-                    key={key}
-                    severity="success" 
-                    value={data[key]}
-                    style={{
-                        backgroundColor: getStatusColor(key as DagState)
-                    }}
+                    <Tag
+                        key={key}
+                        severity="success"
+                        value={data[key]}
+                        style={{
+                            backgroundColor: getStatusColor(key as DagState)
+                        }}
                     ></Tag>
 
-                
+
                 ))
             }
         </div>

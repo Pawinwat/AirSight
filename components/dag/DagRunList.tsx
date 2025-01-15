@@ -2,11 +2,13 @@ import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { DataView } from 'primereact/dataview';
 import { Tag } from 'primereact/tag';
+import { useDagRuns } from 'src/api/local/airflow/hooks';
 import { getStatusColor, getStatusIcon, STATE_COLORS } from 'src/constant/colors';
 import { useDagRunsContext } from 'src/contexts/useDagsRuns';
 import { DagRun, DagState } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import DagRunTemplate from './DagRunTemplate';
+import { useState } from 'react';
 interface DagRunListProps {
     connection: ConnectionData
 }
@@ -18,11 +20,41 @@ function DagRunList({ connection }: DagRunListProps) {
         handleStatusFilterClick,
         runStat,
         dagRuns,
-        selectedRun
+        selectedRun,
+        dagId
     } = useDagRunsContext()
+    const [showRecent, setShowRecent] = useState(false)
+    const runParams = {
+        offset: 0,
+        limit: 200,
+        order_by: '-execution_date',
+    }
+    const recentRuns = useDagRuns(
+        {
+            params: runParams
+        },
+        connection?.connection_id as string,
+        dagId as string,
+        showRecent
+    )
+    const recentDagRunsData = recentRuns?.data?.dag_runs
+    const recentRunData = recentDagRunsData?.filter(run => (selectedRunsTags?.length === 0) || selectedRunsTags.includes(run.state)) || []
+
+    const recentRunStat = recentDagRunsData?.reduce((acc, run) => {
+        acc[run.state] = (acc[run.state] || 0) + 1; // Increment the count for the state
+        return acc;
+    }, {} as Record<string, number>);
+
+    const displayData = {
+        run:showRecent ? recentRunData: runData,
+        stat:showRecent ? recentRunStat: runStat,
+        isFetching:showRecent ? recentRuns?.isFetching:dagRuns?.isFetching,
+        query:showRecent ? recentRuns:dagRuns
+    }
+
     return (
         <DataView
-            value={runData}
+            value={displayData?.run}
             listTemplate={(item, option) =>
                 DagRunTemplate(
                     item,
@@ -39,17 +71,24 @@ function DagRunList({ connection }: DagRunListProps) {
             emptyMessage="No run"
             header={
                 <div
-                    style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center' }}
+                    style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center', justifyContent: 'center' }}
                 >
-                    <p>
+                    <div>
                         Recent
-                    </p>
+                        <Checkbox
+                            checked={showRecent}
+                            onChange={(e) => {
+                                setShowRecent(!!e.checked)
+                            }}
+                            size={10}
+                        />
+                    </div>
                     <div
                         style={{ display: 'flex', flexDirection: 'row', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}
                     >
                         {Object.keys(STATE_COLORS).map((statusKey) => (
                             <Tag
-                            icon={getStatusIcon(statusKey as DagState)}
+                                icon={getStatusIcon(statusKey as DagState)}
                                 key={`tag-${statusKey}`}
                                 style={{
                                     backgroundColor: getStatusColor(statusKey as DagState),
@@ -63,22 +102,22 @@ function DagRunList({ connection }: DagRunListProps) {
                                 }}
                                 onClick={() => handleStatusFilterClick(statusKey)}
                             >
-                                {statusKey}{`(${runStat?.[statusKey] || 0})`}
+                                {statusKey}{`(${displayData?.stat?.[statusKey] || 0})`}
                             </Tag>
                         ))}
                     </div>
                     <Button
-                        icon={dagRuns?.isFetching ? 'pi pi-spin pi-refresh' : 'pi pi-refresh'}
+                        icon={displayData?.isFetching ? 'pi pi-spin pi-refresh' : 'pi pi-refresh'}
                         onClick={() => {
-                            dagRuns?.refetch()
+                            displayData?.query?.refetch()
                         }}
-                        disabled={dagRuns?.isFetching}
+                        disabled={displayData?.isFetching}
                         style={{
                             width: '40px',
                             height: '20px'
                         }}
                     />
-                    <Checkbox checked />
+                    {/* <Checkbox checked /> */}
                 </div>
             }
         />

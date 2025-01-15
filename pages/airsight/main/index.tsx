@@ -64,6 +64,7 @@ const MainPage: React.FC<MainPageProps> = ({ connections }: MainPageProps) => {
   //   setIsVertical(!isVertical); // Toggle between vertical and horizontal
   // };
 
+
   return (
     <div
       style={{
