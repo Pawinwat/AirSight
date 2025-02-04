@@ -30,7 +30,7 @@ const mapDagRunDataToTimeLabels = (data: DagRun[], timeLabels: string[]): [Recor
 
   // Count occurrences of execution_date rounded to the nearest 5 minutes
   data.forEach((item) => {
-    const roundedDate = roundToNearestMinutes(parseISO(item.execution_date), { nearestTo: 5 });
+    const roundedDate = roundToNearestMinutes(parseISO(item.execution_date), { nearestTo: 5, roundingMethod: 'floor' });
     const timeString = format(roundedDate, 'HH:mm:ss');
     if (!counts[timeString]) {
       counts[timeString] = {}
@@ -50,14 +50,19 @@ const mapDagRunDataToTimeLabels = (data: DagRun[], timeLabels: string[]): [Recor
   const runs = timeLabels.map((label) => {
 
     const succesRate = ((counts[label]?.success / counts[label]?.total) * 100)
+    const runningRate = ((counts[label]?.running / counts[label]?.total) * 100)
+
     return {
       time: label,
       ...counts[label],
       succesRate: succesRate,
-      failRate: 100 - succesRate
+      failRate: 100 - (succesRate + (runningRate || 0)),
+      runningRate
     }
   });
   return [runs, stats]
+
+
 };
 
 interface DagRunEyeProps {
@@ -65,7 +70,9 @@ interface DagRunEyeProps {
   data: DagRun[];
   mode?: 'count' | 'state'
 }
-
+const valueFormatter = (value: OptionDataValue | any) => {
+  return `${value ? value?.toFixed(1) : 0}%`
+}
 const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) => {
   const timeLabels = generateDailyTimeLabels();
   const [dagRunCounts, dagRunStats] = mapDagRunDataToTimeLabels(data, timeLabels);
@@ -73,11 +80,11 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
   const [now, setNow] = useState<Date>(new Date())
 
   const [nowSeries, setNowSeries] = useState<string>('#FFF')
-  useInterval(()=>{
-    setNowSeries(prev=>prev=='#FFF'?'rgba(255,255,255,.5)':'#FFF')
+  useInterval(() => {
+    setNowSeries(prev => prev == '#FFF' ? 'rgba(255,255,255,.5)' : '#FFF')
     setNow(new Date())
-  },2000)
-  const tick = timeLabels?.map(time => ({ time, value: (format(roundToNearestMinutes(now, { nearestTo: 5 }), 'HH:mm:ss') == time) ? 1 : 0 }))
+  }, 2000)
+  const tick = timeLabels?.map(time => ({ time, value: (format(roundToNearestMinutes(now, { nearestTo: 5, roundingMethod: 'floor' }), 'HH:mm:ss') == time) ? 1 : 0 }))
   const series: SeriesOption[] = [
     {
       type: 'bar',
@@ -94,7 +101,10 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
       },
     },
     {
-      type: 'bar',
+      // type: 'line',
+      // areaStyle: {},
+      // markPoint:{},
+      type:'bar',
       encode: { angle: 'time', radius: 'total' },
       datasetIndex: 0,
       // data: dagRunCounts?.map(rec=>rec?.total || 0),
@@ -127,9 +137,9 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
       name: 'Succes',
       itemStyle: {
         color: (params: DefaultLabelFormatterCallbackParams | any) => {
-          const value = (params?.data?.succesRate || 0) as number;
+          const value = (params?.data?.failRate || 0) as number;
           // Set up color transition based on value range from green to yellow to red
-          if (value < 100) {
+          if (value > 0) {
             return getStatusColor('upstream_failed')
           } else {
             return getStatusColor('success')
@@ -137,9 +147,24 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
         },
       },
       tooltip: {
-        valueFormatter(value: OptionDataValue | any) {
-          return value ? value?.toFixed(2) : 0
-        },
+        valueFormatter
+      }
+    },
+    {
+      type: 'bar',
+      encode: { angle: 'time', radius: 'runningRate' },
+      datasetIndex: 0,
+      stack: 'status',
+      name: 'Running',
+      // data: dagRunCounts?.map(rec => (Math.round((rec?.success as number) / (rec?.total as number)) * 100) || null),
+      coordinateSystem: 'polar',
+      label: { show: false },
+      polarIndex: 1,
+      itemStyle: {
+        color: (_params: any) => getStatusColor('running')
+      },
+      tooltip: {
+        valueFormatter
       }
     },
     {
@@ -156,9 +181,7 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
         color: (_params: any) => getStatusColor('failed')
       },
       tooltip: {
-        valueFormatter(value: OptionDataValue | any) {
-          return value ? value?.toFixed(2) : 0
-        },
+        valueFormatter
       }
     },
 
@@ -198,7 +221,7 @@ const DagRunEye: React.FC<DagRunEyeProps> = ({ style, data }: DagRunEyeProps) =>
     radiusAxis: [{ polarIndex: 0 }, { polarIndex: 1 }, { polarIndex: 2, show: false }],
     dataset: [
       {
-        dimensions: ['time', 'total', 'success', 'failed', 'running', 'succesRate', 'failRate'],
+        dimensions: ['time', 'total', 'success', 'failed', 'running', 'succesRate', 'failRate', 'runningRate'],
         source: dagRunCounts,
       },
       {

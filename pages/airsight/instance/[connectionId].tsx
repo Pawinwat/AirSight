@@ -3,7 +3,6 @@ import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Button } from 'primereact/button';
-import { Checkbox } from 'primereact/checkbox';
 import { Chip } from 'primereact/chip';
 import { Column, ColumnBodyOptions } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
@@ -15,6 +14,7 @@ import { JSX, ReactNode, useEffect, useState } from 'react';
 import { useDags } from 'src/api/local/airflow/hooks';
 import DagRunEye from 'src/components/dag/DagRunEye';
 import DagRunList from 'src/components/dag/DagRunList';
+import DagRunStat from 'src/components/dag/DagRunStat';
 import RunDagButton from 'src/components/dag/RunDagButton';
 import { CARD_GAP } from 'src/components/layout/constants';
 import PageFrame from 'src/components/layout/PageFrame';
@@ -26,7 +26,6 @@ import { PATH } from 'src/routes';
 import { AirflowDagsResponse, Dag } from 'src/types/airflow';
 import { ConnectionData } from 'src/types/db';
 import ConnectionSelector from '../../../components/ConnectionSelector';
-import DagRunStat from 'src/components/dag/DagRunStat';
 
 interface DagsServerProps {
   connection: ConnectionData
@@ -165,13 +164,13 @@ export default function DagsPage({ connections }: DagsServerProps) {
     setSelectedTags(newTags);
     updateQueryParams(0, limit, newTags, onlyActive); // Update query when tags change
   };
-  const handleOnlyActiveChange = () => {
-    setOnlyActive((prev) => {
-      const newValue = !prev;
-      updateQueryParams(0, limit, selectedTags, newValue); // Update query when checkbox changes
-      return newValue;
-    });
-  };
+  // const handleOnlyActiveChange = () => {
+  //   setOnlyActive((prev) => {
+  //     const newValue = !prev;
+  //     updateQueryParams(0, limit, selectedTags, newValue); // Update query when checkbox changes
+  //     return newValue;
+  //   });
+  // };
 
 
 
@@ -238,20 +237,21 @@ export default function DagsPage({ connections }: DagsServerProps) {
       <div style={{ gap: 5, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <ConnectionSelector connections={connections} />
-          <p>Total DAGs: {dagsData?.total_entries}</p>
+
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem'}}>
             <Dropdown
               value={limit}
               options={rowsPerPageOptions.map((val) => ({ label: `${val} rows`, value: val }))}
               onChange={(e) => handleRowsPerPageChange(e.value)}
               placeholder="Rows per page"
             />
-            <div className="flex align-items-center gap-50">
+
+            {/* <div className="flex align-items-center gap-50">
               <Checkbox inputId="ingredient1" name="pizza" value="Cheese" onChange={handleOnlyActiveChange} checked={onlyActive} />
               <label htmlFor="ingredient1" className="ml-2">Only Active</label>
-            </div>
+            </div> */}
           </div>
           <div
             style={{
@@ -288,11 +288,12 @@ export default function DagsPage({ connections }: DagsServerProps) {
           </div>
 
           <span>
+            <p>Total DAGs: {dagsData?.total_entries}</p>
             Page {currentPage} of {totalPages}
           </span>
         </div>
 
-        <DataTable size="small" value={dagsData?.dags || []} className="p-datatable-gridlines">
+        <DataTable size="small" value={dagsData?.dags || []} >
           <Column field="dag_id" header="DAG ID" style={{ width: '50%' }} body={mainBodyTemplate} />
           <Column field="description" header="Description" style={{ width: '25%' }} body={loadingTemplate} />
           <Column field="last_parsed_time" header="Last Parsed Time" style={{ width: '25%' }} body={loadingTemplate} />

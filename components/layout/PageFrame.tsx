@@ -13,7 +13,10 @@ function PageFrame({ children }: PageFrameProps) {
             exit="exit"
             variants={pageVariants}
             transition={{ duration: 0.5 }}
-
+            style={{
+                // width:'100%' 
+                // backgroundColor: "red"
+            }}
         >
             {children}
         </motion.div>

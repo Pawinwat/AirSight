@@ -1,6 +1,9 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { AirflowDagsResponse, Version } from "src/types/airflow";
-
+import {
+  AirflowDagRunsResponse,
+  AirflowDagsResponse,
+  Version,
+} from "src/types/airflow";
 
 /**
  * Get a list of DAGs from the Airflow instance.
@@ -38,8 +41,11 @@ export const getDags = async (config: AxiosRequestConfig) => {
  * @param dagId - The ID of the DAG.
  * @returns DAG details.
  */
-export const getDagDetails = async (config: AxiosRequestConfig, dagId: string) => {
-  const url = `${config.baseURL}/api/v1/dags/${dagId}`
+export const getDagDetails = async (
+  config: AxiosRequestConfig,
+  dagId: string
+) => {
+  const url = `${config.baseURL}/api/v1/dags/${dagId}`;
   const { data } = await axios.get(url, config);
   return data;
 };
@@ -58,16 +64,14 @@ export const triggerDag = async (
 ) => {
   // const url = `${config.baseURL}/api/v1/dags/${dagId}/dagRuns`
   try {
-
     const { data } = await axios.post(
       `${config.baseURL}/api/v1/dags/${dagId}/dagRuns`,
       payload,
       config
     );
     return data;
-  }
-  catch (e: any) {
-    return e.response.data
+  } catch (e: any) {
+    return e.response.data;
   }
 };
 
@@ -78,8 +82,16 @@ export const triggerDag = async (
  * @returns List of DAG runs.
  */
 export const getDagRuns = async (config: AxiosRequestConfig, dagId: string) => {
-  const { data } = await axios.get(`${config.baseURL}/api/v1/dags/${dagId}/dagRuns`, config);
-  return data;
+  const { data } = await axios.get<AirflowDagRunsResponse | string>(
+    `${config.baseURL}/api/v1/dags/${dagId}/dagRuns`,
+    config
+  );
+  if (!(typeof data === "string")) return data;
+
+  return {
+    dag_runs: [],
+    total_entries: 0,
+  };
 };
 
 /**
@@ -161,19 +173,20 @@ export const updateDag = async (
   return data;
 };
 
-
 /**
  * Get the details of a specific DAG.
  * @param config - Axios request configuration including baseURL, headers.
  * @param dagId - The ID of the DAG.
  * @returns DAG details.
  */
-export const getDagSource = async (config: AxiosRequestConfig, fileToken: string) => {
-  const url = `${config.baseURL}/api/v1/dagSources/${fileToken}`
+export const getDagSource = async (
+  config: AxiosRequestConfig,
+  fileToken: string
+) => {
+  const url = `${config.baseURL}/api/v1/dagSources/${fileToken}`;
   const { data } = await axios.get(url, config);
   return data;
 };
-
 
 /**
  * Get the logs for a specific task instance.
@@ -262,7 +275,10 @@ export const getEventLogs = async (
  * @returns Log configuration details.
  */
 export const getLogConfig = async (config: AxiosRequestConfig) => {
-  const { data } = await axios.get(`${config.baseURL}/api/v1/config/logging`, config);
+  const { data } = await axios.get(
+    `${config.baseURL}/api/v1/config/logging`,
+    config
+  );
   return data;
 };
 
@@ -272,11 +288,16 @@ export const getLogConfig = async (config: AxiosRequestConfig) => {
  * @param logId - The ID of the log entry.
  * @returns Log entry details.
  */
-export const getLogDetails = async (config: AxiosRequestConfig, logId: string) => {
-  const { data } = await axios.get(`${config.baseURL}/api/v1/eventLogs/${logId}`, config);
+export const getLogDetails = async (
+  config: AxiosRequestConfig,
+  logId: string
+) => {
+  const { data } = await axios.get(
+    `${config.baseURL}/api/v1/eventLogs/${logId}`,
+    config
+  );
   return data;
 };
-
 
 /**
  * Get task instances for a specific DAG run.
