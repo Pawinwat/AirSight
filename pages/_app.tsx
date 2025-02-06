@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'; // Import Framer Motion
 import { AppProps } from 'next/app';
 import 'primeicons/primeicons.css'; // PrimeIcons
 import 'primereact/resources/primereact.min.css'; // PrimeReact core styles
-import 'primereact/resources/themes/mdc-dark-indigo/theme.css'; // PrimeReact theme
+import 'primereact/resources/themes/lara-dark-indigo/theme.css'; // PrimeReact theme
 import { Suspense } from 'react';
 import './app.css'; // Custom CSS file
 import { DagRunsProvider } from 'src/contexts/useDagsRuns';
