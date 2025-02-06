@@ -60,9 +60,9 @@ export default function DagsPage({ connections }: DagsServerProps) {
   const router = useRouter();
   const { query } = router;
   const { connection, dagRuns, taskInstanceData, runStat } = useDagRunsContext()
-
-  const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
+  // const [onlyActive, setOnlyActive] = useState<boolean>(query.only_active === 'true'); // Initialize from query
   // Pagination variables
+  const onlyActive = true
   const [limit, setLimit] = useState(parseInt((query.limit as string) || '10', 10));
   const offset = parseInt((query.offset as string) || '0', 10);
   const tags = query?.tags || null
