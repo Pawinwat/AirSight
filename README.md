@@ -55,7 +55,7 @@ mpx prisma db push
 ```  
 
 ### 6. Pull Latest Changes  
-Fetch any latest dependencies or configurations:  
+Fetch the latest database schema and generate Prisma client:   
 ```sh
 yarn pull
 ```  
