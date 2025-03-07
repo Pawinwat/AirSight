@@ -4,7 +4,7 @@
 
 ## Features
 - **Centralized Monitoring**: Seamlessly track multiple Apache Airflow instances in one place.
-- **Real-Time Alerts**: Get notified instantly of any failures, delays, or anomalies in your DAGs.
+- **Real-Time Alerts**: Get notified instantly of any failures, delays, or anomalies in your DAGs (TODO).
 - **Detailed Insights**: Drill down into task statuses, execution times, and system metrics to optimize workflow performance.
 - **User-Friendly Dashboard**: Navigate through complex workflows effortlessly with a clean, intuitive UI.
 - **Scalable Solution**: Designed to handle multiple Airflow environments, making it ideal for organizations with complex data pipelines.
