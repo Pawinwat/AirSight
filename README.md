@@ -16,3 +16,54 @@
 
 ## Getting Started
 Follow the steps in the **Installation Guide** to set up AirSight and start monitoring your Airflow instances.
+
+
+# Installation Instructions for AirSight  
+
+### 1. Clone the Repository  
+Run the following command to clone the repository:  
+```sh
+git clone https://github.com/Pawinwat/AirSight.git
+```  
+
+### 2. Navigate to the Project Directory  
+Move into the project folder:  
+```sh
+cd AirSight
+```  
+
+### 3. Install Dependencies  
+Use Yarn to install all required dependencies:  
+```sh
+yarn install
+```  
+
+### 4. Create a `.env` File  
+- Create a `.env` file in the project root directory.  
+- Add the following Prisma database environment variable:  
+
+#### Example `.env` file:  
+```ini
+DATABASE_URL="postgresql://user:password@localhost:5432/mydatabase"
+```
+Modify the values based on your database configuration.  
+
+### 5. Push Prisma Database Schema  
+Run the following command to apply the database schema:  
+```sh
+mpx prisma db push
+```  
+
+### 6. Pull Latest Changes  
+Fetch any latest dependencies or configurations:  
+```sh
+yarn pull
+```  
+
+### 7. Build the Project  
+Finally, build the project using:  
+```sh
+yarn build
+```  
+
+Now your project is set up and ready to run! 🚀
