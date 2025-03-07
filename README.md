@@ -54,7 +54,7 @@ Run the following command to apply the database schema:
 mpx prisma db push
 ```  
 
-### 6. Pull Latest Changes  
+### 6. Generate Prisma client 
 Fetch the latest database schema and generate Prisma client:   
 ```sh
 yarn pull
